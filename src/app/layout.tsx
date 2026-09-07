@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import './globals.css';
 import { LanguageProvider } from '@/components/providers/LanguageContext';
+import FirebaseAnalytics from '@/components/providers/FirebaseAnalytics';
 
 export const metadata: Metadata = {
   title: 'MedicalPress Hospital | Advanced Healthcare & Compassionate Care',
@@ -22,6 +23,7 @@ export default function RootLayout({
     <html lang="en">
       <body className="antialiased min-h-screen flex flex-col bg-background text-text-primary">
         <LanguageProvider>
+          <FirebaseAnalytics />
           {children}
         </LanguageProvider>
       </body>
