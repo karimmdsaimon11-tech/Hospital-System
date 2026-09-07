@@ -45,6 +45,7 @@ interface GlobalInfo {
   announcementText: string;
   announcementActive: boolean;
   hospitalName: string;
+  tagline?: string;
 }
 
 export default function Navbar() {
@@ -75,11 +76,12 @@ export default function Navbar() {
     announcementText: 'Welcome to MedicalPress — Advanced Healthcare & Compassionate Care',
     announcementActive: true,
     hospitalName: 'MedicalPress',
+    tagline: 'Advanced Healthcare & Compassionate Care',
   });
 
-  // Fetch dynamic settings from database
-  useEffect(() => {
-    fetch('/api/settings')
+  // Fetch dynamic settings from database without cache
+  const fetchSettings = () => {
+    fetch('/api/settings', { cache: 'no-store' })
       .then((res) => res.json())
       .then((data) => {
         if (data && data.hospitalName) {
@@ -90,11 +92,28 @@ export default function Navbar() {
             announcementText: data.announcementText || 'Welcome to MedicalPress — Advanced Healthcare & Compassionate Care',
             announcementActive: data.announcementActive !== false,
             hospitalName: data.hospitalName || 'MedicalPress',
+            tagline: data.tagline || 'Advanced Healthcare & Compassionate Care',
           });
         }
       })
       .catch(() => {});
+  };
+
+  useEffect(() => {
+    fetchSettings();
+
+    const handleUpdate = (e: any) => {
+      if (e?.detail) {
+        setSettings((prev) => ({ ...prev, ...e.detail }));
+      } else {
+        fetchSettings();
+      }
+    };
+
+    window.addEventListener('hospital-settings-updated', handleUpdate);
+    return () => window.removeEventListener('hospital-settings-updated', handleUpdate);
   }, []);
+
 
   // Close dropdowns on outside click
   useEffect(() => {
@@ -260,11 +279,10 @@ export default function Navbar() {
             </div>
             <div className="flex flex-col">
               <div className="flex items-center leading-none">
-                <span className="text-2xl font-black tracking-tight text-dark">Medical</span>
-                <span className="text-2xl font-black tracking-tight text-primary">PRESS</span>
+                <span className="text-xl sm:text-2xl font-black tracking-tight text-dark">{settings.hospitalName}</span>
               </div>
-              <span className="text-[10px] uppercase font-bold tracking-widest text-text-secondary mt-1">
-                International Healthcare
+              <span className="text-[10px] uppercase font-bold tracking-widest text-text-secondary mt-1 truncate max-w-[200px] sm:max-w-none">
+                {settings.tagline || 'International Healthcare'}
               </span>
             </div>
           </Link>

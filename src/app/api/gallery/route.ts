@@ -1,5 +1,13 @@
 import { NextResponse } from 'next/server';
+import { revalidatePath } from 'next/cache';
 import { prisma } from '@/lib/db';
+
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
+const noCacheHeaders = {
+  'Cache-Control': 'no-store, no-cache, must-revalidate, max-age=0',
+};
 
 export async function GET(request: Request) {
   try {
@@ -15,9 +23,9 @@ export async function GET(request: Request) {
       where,
       orderBy: { createdAt: 'desc' },
     });
-    return NextResponse.json(items);
+    return NextResponse.json(items, { headers: noCacheHeaders });
   } catch (error) {
-    return NextResponse.json({ error: 'Failed to fetch gallery' }, { status: 500 });
+    return NextResponse.json({ error: 'Failed to fetch gallery' }, { status: 500, headers: noCacheHeaders });
   }
 }
 
@@ -36,9 +44,16 @@ export async function POST(request: Request) {
         isActive: body.isActive !== false,
       },
     });
-    return NextResponse.json(item);
+
+    try {
+      revalidatePath('/gallery');
+      revalidatePath('/');
+      revalidatePath('/admin/gallery');
+    } catch (e) {}
+
+    return NextResponse.json(item, { headers: noCacheHeaders });
   } catch (error: any) {
-    return NextResponse.json({ error: error.message || 'Failed to add gallery item' }, { status: 400 });
+    return NextResponse.json({ error: error.message || 'Failed to add gallery item' }, { status: 400, headers: noCacheHeaders });
   }
 }
 
@@ -46,11 +61,19 @@ export async function DELETE(request: Request) {
   try {
     const { searchParams } = new URL(request.url);
     const id = searchParams.get('id');
-    if (!id) return NextResponse.json({ error: 'ID required' }, { status: 400 });
+    if (!id) return NextResponse.json({ error: 'ID required' }, { status: 400, headers: noCacheHeaders });
 
     await prisma.galleryItem.delete({ where: { id } });
-    return NextResponse.json({ success: true });
+
+    try {
+      revalidatePath('/gallery');
+      revalidatePath('/');
+      revalidatePath('/admin/gallery');
+    } catch (e) {}
+
+    return NextResponse.json({ success: true }, { headers: noCacheHeaders });
   } catch (error: any) {
-    return NextResponse.json({ error: error.message || 'Failed to delete gallery item' }, { status: 500 });
+    return NextResponse.json({ error: error.message || 'Failed to delete gallery item' }, { status: 400, headers: noCacheHeaders });
   }
 }
+

@@ -1,5 +1,13 @@
 import { NextResponse } from 'next/server';
+import { revalidatePath } from 'next/cache';
 import { prisma } from '@/lib/db';
+
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
+const noCacheHeaders = {
+  'Cache-Control': 'no-store, no-cache, must-revalidate, max-age=0',
+};
 
 export async function GET(request: Request) {
   try {
@@ -20,8 +28,8 @@ export async function GET(request: Request) {
 
     if (search) {
       where.OR = [
-        { name: { contains: search } },
-        { specialty: { contains: search } },
+        { name: { contains: search, mode: 'insensitive' } },
+        { specialty: { contains: search, mode: 'insensitive' } },
       ];
     }
 
@@ -36,10 +44,10 @@ export async function GET(request: Request) {
       orderBy: { name: 'asc' },
     });
 
-    return NextResponse.json(doctors);
+    return NextResponse.json(doctors, { headers: noCacheHeaders });
   } catch (error) {
     console.error('Failed to fetch doctors:', error);
-    return NextResponse.json({ error: 'Failed to fetch doctors' }, { status: 500 });
+    return NextResponse.json({ error: 'Failed to fetch doctors' }, { status: 500, headers: noCacheHeaders });
   }
 }
 
@@ -87,10 +95,16 @@ export async function POST(request: Request) {
       },
     });
 
-    return NextResponse.json(doctor);
+    try {
+      revalidatePath('/doctors');
+      revalidatePath('/');
+      revalidatePath('/admin/doctors');
+    } catch (e) {}
+
+    return NextResponse.json(doctor, { headers: noCacheHeaders });
   } catch (error: any) {
     console.error('Failed to create doctor:', error);
-    return NextResponse.json({ error: error.message || 'Failed to create doctor' }, { status: 400 });
+    return NextResponse.json({ error: error.message || 'Failed to create doctor' }, { status: 400, headers: noCacheHeaders });
   }
 }
 
@@ -116,12 +130,19 @@ export async function PUT(request: Request) {
         recordId: doctor.id,
         details: `Updated details for doctor: ${doctor.name}`,
       },
-    });
+    }).catch(() => {});
 
-    return NextResponse.json(doctor);
+    try {
+      revalidatePath('/doctors');
+      revalidatePath('/');
+      revalidatePath('/admin/doctors');
+      if (doctor.slug) revalidatePath(`/doctors/${doctor.slug}`);
+    } catch (e) {}
+
+    return NextResponse.json(doctor, { headers: noCacheHeaders });
   } catch (error: any) {
     console.error('Failed to update doctor:', error);
-    return NextResponse.json({ error: error.message || 'Failed to update doctor' }, { status: 400 });
+    return NextResponse.json({ error: error.message || 'Failed to update doctor' }, { status: 400, headers: noCacheHeaders });
   }
 }
 
@@ -129,7 +150,7 @@ export async function DELETE(request: Request) {
   try {
     const { searchParams } = new URL(request.url);
     const id = searchParams.get('id');
-    if (!id) return NextResponse.json({ error: 'Doctor ID is required' }, { status: 400 });
+    if (!id) return NextResponse.json({ error: 'Doctor ID is required' }, { status: 400, headers: noCacheHeaders });
 
     const doctor = await prisma.doctor.findUnique({ where: { id } });
     await prisma.doctor.delete({ where: { id } });
@@ -142,11 +163,18 @@ export async function DELETE(request: Request) {
         recordId: id,
         details: `Removed doctor: ${doctor?.name || id}`,
       },
-    });
+    }).catch(() => {});
 
-    return NextResponse.json({ success: true });
+    try {
+      revalidatePath('/doctors');
+      revalidatePath('/');
+      revalidatePath('/admin/doctors');
+    } catch (e) {}
+
+    return NextResponse.json({ success: true }, { headers: noCacheHeaders });
   } catch (error: any) {
     console.error('Failed to delete doctor:', error);
-    return NextResponse.json({ error: error.message || 'Failed to delete doctor' }, { status: 400 });
+    return NextResponse.json({ error: error.message || 'Failed to delete doctor' }, { status: 400, headers: noCacheHeaders });
   }
 }
+

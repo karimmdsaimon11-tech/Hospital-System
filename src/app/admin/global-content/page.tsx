@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import { 
   Globe, 
   Save, 
@@ -14,6 +15,7 @@ import {
 } from 'lucide-react';
 
 export default function AdminGlobalContentPage() {
+  const router = useRouter();
   const [formData, setFormData] = useState({
     hospitalName: 'MedicalPress Hospital',
     tagline: 'Advanced Healthcare & Compassionate Care',
@@ -38,8 +40,8 @@ export default function AdminGlobalContentPage() {
   const [saving, setSaving] = useState(false);
   const [success, setSuccess] = useState(false);
 
-  useEffect(() => {
-    fetch('/api/settings')
+  const loadSettings = () => {
+    fetch('/api/settings', { cache: 'no-store' })
       .then((res) => res.json())
       .then((data) => {
         if (data && data.hospitalName) {
@@ -50,6 +52,10 @@ export default function AdminGlobalContentPage() {
         }
       })
       .catch(() => {});
+  };
+
+  useEffect(() => {
+    loadSettings();
   }, []);
 
   const handleSave = async (e: React.FormEvent) => {
@@ -65,7 +71,17 @@ export default function AdminGlobalContentPage() {
       });
 
       if (!res.ok) throw new Error('Failed to update settings');
+      const updated = await res.json();
+      if (updated && updated.hospitalName) {
+        setFormData((prev) => ({ ...prev, ...updated }));
+      }
 
+      // Notify other components (Navbar, Footer) in the browser
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(new CustomEvent('hospital-settings-updated', { detail: updated }));
+      }
+
+      router.refresh();
       setSuccess(true);
       setTimeout(() => setSuccess(false), 4000);
     } catch (err) {

@@ -40,14 +40,15 @@ export default function Footer() {
 
   const [departments, setDepartments] = useState<any[]>([]);
 
-  useEffect(() => {
-    fetch('/api/settings')
+  const fetchFooterSettings = () => {
+    fetch('/api/settings', { cache: 'no-store' })
       .then((res) => res.json())
       .then((data) => {
         if (data && data.hospitalName) {
           setFooterData((prev) => ({
             ...prev,
             hospitalName: data.hospitalName || prev.hospitalName,
+            tagline: data.tagline || prev.tagline,
             phone: data.phone || prev.phone,
             emergencyPhone: data.emergencyPhone || prev.emergencyPhone,
             email: data.email || prev.email,
@@ -59,7 +60,7 @@ export default function Footer() {
       })
       .catch(() => {});
 
-    fetch('/api/departments')
+    fetch('/api/departments', { cache: 'no-store' })
       .then((res) => res.json())
       .then((data) => {
         if (Array.isArray(data)) {
@@ -67,6 +68,21 @@ export default function Footer() {
         }
       })
       .catch(() => {});
+  };
+
+  useEffect(() => {
+    fetchFooterSettings();
+
+    const handleUpdate = (e: any) => {
+      if (e?.detail) {
+        setFooterData((prev) => ({ ...prev, ...e.detail }));
+      } else {
+        fetchFooterSettings();
+      }
+    };
+
+    window.addEventListener('hospital-settings-updated', handleUpdate);
+    return () => window.removeEventListener('hospital-settings-updated', handleUpdate);
   }, []);
 
   return (
@@ -84,11 +100,10 @@ export default function Footer() {
               </div>
               <div className="flex flex-col">
                 <div className="flex items-center">
-                  <span className="text-xl font-black text-white">Medical</span>
-                  <span className="text-xl font-black text-primary">PRESS</span>
+                  <span className="text-xl font-black text-white">{footerData.hospitalName}</span>
                 </div>
                 <span className="text-[9px] uppercase tracking-widest text-gray-400">
-                  International Hospital
+                  {footerData.tagline || 'International Hospital'}
                 </span>
               </div>
             </Link>

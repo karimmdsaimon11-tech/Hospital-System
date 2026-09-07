@@ -1,5 +1,13 @@
 import { NextResponse } from 'next/server';
+import { revalidatePath } from 'next/cache';
 import { prisma } from '@/lib/db';
+
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
+const noCacheHeaders = {
+  'Cache-Control': 'no-store, no-cache, must-revalidate, max-age=0',
+};
 
 export async function GET() {
   try {
@@ -11,9 +19,9 @@ export async function GET() {
         },
       },
     });
-    return NextResponse.json(departments);
+    return NextResponse.json(departments, { headers: noCacheHeaders });
   } catch (error) {
-    return NextResponse.json({ error: 'Failed to fetch departments' }, { status: 500 });
+    return NextResponse.json({ error: 'Failed to fetch departments' }, { status: 500, headers: noCacheHeaders });
   }
 }
 
@@ -28,8 +36,8 @@ export async function POST(request: Request) {
         slug: body.slug || slug,
         icon: body.icon || 'Stethoscope',
         image: body.image || 'https://images.unsplash.com/photo-1516549655169-df83a0774514?auto=format&fit=crop&w=800&q=80',
-        shortDesc: body.shortDesc,
-        description: body.description,
+        shortDesc: body.shortDesc || '',
+        description: body.description || '',
         headOfDepartment: body.headOfDepartment || 'Consultant Specialist',
         featured: Boolean(body.featured),
         status: body.status || 'Active',
@@ -44,11 +52,17 @@ export async function POST(request: Request) {
         recordId: department.id,
         details: `Created department: ${department.name}`,
       },
-    });
+    }).catch(() => {});
 
-    return NextResponse.json(department);
+    try {
+      revalidatePath('/departments');
+      revalidatePath('/');
+      revalidatePath('/admin/departments');
+    } catch (e) {}
+
+    return NextResponse.json(department, { headers: noCacheHeaders });
   } catch (error: any) {
-    return NextResponse.json({ error: error.message || 'Failed to create department' }, { status: 400 });
+    return NextResponse.json({ error: error.message || 'Failed to create department' }, { status: 400, headers: noCacheHeaders });
   }
 }
 
@@ -62,9 +76,16 @@ export async function PUT(request: Request) {
       data,
     });
 
-    return NextResponse.json(department);
+    try {
+      revalidatePath('/departments');
+      revalidatePath('/');
+      revalidatePath('/admin/departments');
+      if (department.slug) revalidatePath(`/departments/${department.slug}`);
+    } catch (e) {}
+
+    return NextResponse.json(department, { headers: noCacheHeaders });
   } catch (error: any) {
-    return NextResponse.json({ error: error.message || 'Failed to update department' }, { status: 400 });
+    return NextResponse.json({ error: error.message || 'Failed to update department' }, { status: 400, headers: noCacheHeaders });
   }
 }
 
@@ -72,11 +93,19 @@ export async function DELETE(request: Request) {
   try {
     const { searchParams } = new URL(request.url);
     const id = searchParams.get('id');
-    if (!id) return NextResponse.json({ error: 'Department ID required' }, { status: 400 });
+    if (!id) return NextResponse.json({ error: 'Department ID required' }, { status: 400, headers: noCacheHeaders });
 
     await prisma.department.delete({ where: { id } });
-    return NextResponse.json({ success: true });
+
+    try {
+      revalidatePath('/departments');
+      revalidatePath('/');
+      revalidatePath('/admin/departments');
+    } catch (e) {}
+
+    return NextResponse.json({ success: true }, { headers: noCacheHeaders });
   } catch (error: any) {
-    return NextResponse.json({ error: error.message || 'Failed to delete department' }, { status: 400 });
+    return NextResponse.json({ error: error.message || 'Failed to delete department' }, { status: 400, headers: noCacheHeaders });
   }
 }
+

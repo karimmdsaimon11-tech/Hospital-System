@@ -1,5 +1,13 @@
 import { NextResponse } from 'next/server';
+import { revalidatePath } from 'next/cache';
 import { prisma } from '@/lib/db';
+
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
+const noCacheHeaders = {
+  'Cache-Control': 'no-store, no-cache, must-revalidate, max-age=0',
+};
 
 export async function GET(request: Request) {
   try {
@@ -25,9 +33,9 @@ export async function GET(request: Request) {
 
     if (search) {
       where.OR = [
-        { patientName: { contains: search } },
+        { patientName: { contains: search, mode: 'insensitive' } },
         { patientPhone: { contains: search } },
-        { appointmentNumber: { contains: search } },
+        { appointmentNumber: { contains: search, mode: 'insensitive' } },
       ];
     }
 
@@ -50,12 +58,13 @@ export async function GET(request: Request) {
       orderBy: [{ appointmentDate: 'desc' }, { timeSlot: 'asc' }],
     });
 
-    return NextResponse.json(appointments);
+    return NextResponse.json(appointments, { headers: noCacheHeaders });
   } catch (error) {
     console.error('Failed to fetch appointments:', error);
-    return NextResponse.json({ error: 'Failed to fetch appointments' }, { status: 500 });
+    return NextResponse.json({ error: 'Failed to fetch appointments' }, { status: 500, headers: noCacheHeaders });
   }
 }
+
 
 export async function POST(request: Request) {
   try {
@@ -180,12 +189,19 @@ export async function POST(request: Request) {
         recordId: appointment.id,
         details: `Booked appointment ${appointmentNumber} with Dr. ${doctor.name}`,
       },
-    });
+    }).catch(() => {});
 
-    return NextResponse.json(appointment);
+    try {
+      revalidatePath('/admin/appointments');
+      revalidatePath('/admin');
+      revalidatePath('/patient-portal');
+      revalidatePath('/appointment');
+    } catch (e) {}
+
+    return NextResponse.json(appointment, { headers: noCacheHeaders });
   } catch (error: any) {
     console.error('Failed to create appointment:', error);
-    return NextResponse.json({ error: error.message || 'Failed to create appointment' }, { status: 500 });
+    return NextResponse.json({ error: error.message || 'Failed to create appointment' }, { status: 500, headers: noCacheHeaders });
   }
 }
 
@@ -208,12 +224,18 @@ export async function PUT(request: Request) {
         recordId: appointment.id,
         details: `Updated status of ${appointment.appointmentNumber} to ${appointment.status}`,
       },
-    });
+    }).catch(() => {});
 
-    return NextResponse.json(appointment);
+    try {
+      revalidatePath('/admin/appointments');
+      revalidatePath('/admin');
+      revalidatePath('/patient-portal');
+    } catch (e) {}
+
+    return NextResponse.json(appointment, { headers: noCacheHeaders });
   } catch (error: any) {
     console.error('Failed to update appointment:', error);
-    return NextResponse.json({ error: error.message || 'Failed to update appointment' }, { status: 400 });
+    return NextResponse.json({ error: error.message || 'Failed to update appointment' }, { status: 400, headers: noCacheHeaders });
   }
 }
 
@@ -221,11 +243,18 @@ export async function DELETE(request: Request) {
   try {
     const { searchParams } = new URL(request.url);
     const id = searchParams.get('id');
-    if (!id) return NextResponse.json({ error: 'Appointment ID required' }, { status: 400 });
+    if (!id) return NextResponse.json({ error: 'Appointment ID required' }, { status: 400, headers: noCacheHeaders });
 
     await prisma.appointment.delete({ where: { id } });
-    return NextResponse.json({ success: true });
+
+    try {
+      revalidatePath('/admin/appointments');
+      revalidatePath('/admin');
+    } catch (e) {}
+
+    return NextResponse.json({ success: true }, { headers: noCacheHeaders });
   } catch (error: any) {
-    return NextResponse.json({ error: error.message || 'Failed to delete appointment' }, { status: 400 });
+    console.error('Failed to delete appointment:', error);
+    return NextResponse.json({ error: error.message || 'Failed to delete appointment' }, { status: 400, headers: noCacheHeaders });
   }
 }

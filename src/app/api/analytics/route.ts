@@ -1,6 +1,13 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
+const noCacheHeaders = {
+  'Cache-Control': 'no-store, no-cache, must-revalidate, max-age=0',
+};
+
 export async function GET() {
   try {
     const [
@@ -79,9 +86,10 @@ export async function GET() {
       recentAppointments,
       recentLeads,
       recentAuditLogs,
-    });
+    }, { headers: noCacheHeaders });
   } catch (error) {
     console.error('Failed to fetch analytics:', error);
-    return NextResponse.json({ error: 'Failed to fetch analytics' }, { status: 500 });
+    return NextResponse.json({ error: 'Failed to fetch analytics' }, { status: 500, headers: noCacheHeaders });
   }
 }
+

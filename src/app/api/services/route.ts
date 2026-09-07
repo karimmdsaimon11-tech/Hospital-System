@@ -1,5 +1,13 @@
 import { NextResponse } from 'next/server';
+import { revalidatePath } from 'next/cache';
 import { prisma } from '@/lib/db';
+
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
+const noCacheHeaders = {
+  'Cache-Control': 'no-store, no-cache, must-revalidate, max-age=0',
+};
 
 export async function GET(request: Request) {
   try {
@@ -17,9 +25,9 @@ export async function GET(request: Request) {
       orderBy: { name: 'asc' },
     });
 
-    return NextResponse.json(services);
+    return NextResponse.json(services, { headers: noCacheHeaders });
   } catch (error) {
-    return NextResponse.json({ error: 'Failed to fetch services' }, { status: 500 });
+    return NextResponse.json({ error: 'Failed to fetch services' }, { status: 500, headers: noCacheHeaders });
   }
 }
 
@@ -34,8 +42,8 @@ export async function POST(request: Request) {
         slug: body.slug || slug,
         icon: body.icon || 'Activity',
         image: body.image || 'https://images.unsplash.com/photo-1516549655169-df83a0774514?auto=format&fit=crop&w=800&q=80',
-        shortDesc: body.shortDesc,
-        description: body.description,
+        shortDesc: body.shortDesc || '',
+        description: body.description || '',
         price: parseFloat(body.price) || 0,
         departmentId: body.departmentId,
         featured: Boolean(body.featured),
@@ -43,9 +51,15 @@ export async function POST(request: Request) {
       },
     });
 
-    return NextResponse.json(service);
+    try {
+      revalidatePath('/services');
+      revalidatePath('/');
+      revalidatePath('/admin/services');
+    } catch (e) {}
+
+    return NextResponse.json(service, { headers: noCacheHeaders });
   } catch (error: any) {
-    return NextResponse.json({ error: error.message || 'Failed to create service' }, { status: 400 });
+    return NextResponse.json({ error: error.message || 'Failed to create service' }, { status: 400, headers: noCacheHeaders });
   }
 }
 
@@ -60,9 +74,16 @@ export async function PUT(request: Request) {
       data,
     });
 
-    return NextResponse.json(service);
+    try {
+      revalidatePath('/services');
+      revalidatePath('/');
+      revalidatePath('/admin/services');
+      if (service.slug) revalidatePath(`/services/${service.slug}`);
+    } catch (e) {}
+
+    return NextResponse.json(service, { headers: noCacheHeaders });
   } catch (error: any) {
-    return NextResponse.json({ error: error.message || 'Failed to update service' }, { status: 400 });
+    return NextResponse.json({ error: error.message || 'Failed to update service' }, { status: 400, headers: noCacheHeaders });
   }
 }
 
@@ -70,11 +91,19 @@ export async function DELETE(request: Request) {
   try {
     const { searchParams } = new URL(request.url);
     const id = searchParams.get('id');
-    if (!id) return NextResponse.json({ error: 'Service ID required' }, { status: 400 });
+    if (!id) return NextResponse.json({ error: 'Service ID required' }, { status: 400, headers: noCacheHeaders });
 
     await prisma.service.delete({ where: { id } });
-    return NextResponse.json({ success: true });
+
+    try {
+      revalidatePath('/services');
+      revalidatePath('/');
+      revalidatePath('/admin/services');
+    } catch (e) {}
+
+    return NextResponse.json({ success: true }, { headers: noCacheHeaders });
   } catch (error: any) {
-    return NextResponse.json({ error: error.message || 'Failed to delete service' }, { status: 400 });
+    return NextResponse.json({ error: error.message || 'Failed to delete service' }, { status: 400, headers: noCacheHeaders });
   }
 }
+
