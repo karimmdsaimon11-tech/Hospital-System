@@ -1,10 +1,5 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  experimental: {
-    outputFileTracingIncludes: {
-      '/**': ['./prisma/**/*', './node_modules/.prisma/client/**/*'],
-    },
-  },
   images: {
     remotePatterns: [
       {

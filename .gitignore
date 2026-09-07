@@ -10,6 +10,8 @@
 /build
 
 # environment files
+.env
+.env.*
 .env*.local
 
 # SQLite temporary journal files
