@@ -1,0 +1,483 @@
+datasource db {
+  provider = "sqlite"
+  url      = "file:./dev.db"
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  password  String
+  name      String
+  role      String   @default("Super Admin") // Super Admin, Hospital Admin, Doctor, Receptionist, Accountant, Content Manager, HR Manager
+  avatar    String?
+  phone     String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  logs      AuditLog[]
+}
+
+model AuditLog {
+  id        String   @id @default(cuid())
+  userId    String?
+  userName  String
+  action    String
+  module    String
+  recordId  String?
+  details   String?
+  createdAt DateTime @default(now())
+  user      User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+}
+
+model GlobalSetting {
+  id                    String   @id @default("default")
+  hospitalName          String   @default("MedicalPress Hospital")
+  tagline               String   @default("Advanced Healthcare & Compassionate Care")
+  logoUrl               String   @default("/logo.png")
+  phone                 String   @default("+1-800-654-3210")
+  emergencyPhone        String   @default("+1-800-999-HELP")
+  ambulancePhone        String   @default("+1-800-555-AMBU")
+  email                 String   @default("care@medicalpress.com")
+  address               String   @default("742 Evergreen Medical Parkway, Healthcare District, NY 10001")
+  openingHours          String   @default("Monday to Saturday — 8:00 AM to 9:00 PM")
+  googleMapsUrl         String   @default("https://maps.google.com")
+  whatsapp              String   @default("+18006543210")
+  facebook              String   @default("https://facebook.com/medicalpress")
+  twitter               String   @default("https://twitter.com/medicalpress")
+  instagram             String   @default("https://instagram.com/medicalpress")
+  linkedin              String   @default("https://linkedin.com/company/medicalpress")
+  youtube               String   @default("https://youtube.com/medicalpress")
+  copyright             String   @default("© 2026 MedicalPress International Hospital. All rights reserved.")
+  announcementActive    Boolean  @default(true)
+  announcementText      String   @default("Welcome to MedicalPress — Advanced Healthcare & Compassionate Care")
+  emergencyBannerActive Boolean  @default(true)
+  emergencyBannerText   String   @default("24/7 Level 1 Trauma & Emergency Care Available. Call hotline directly.")
+  updatedAt             DateTime @updatedAt
+}
+
+model HomepageSection {
+  id        String   @id @default(cuid())
+  key       String   @unique
+  title     String
+  subtitle  String?
+  order     Int      @default(0)
+  isActive  Boolean  @default(true)
+  metadata  String?  // JSON string for section-specific config
+}
+
+model SeoSetting {
+  id              String   @id @default(cuid())
+  pagePath        String   @unique
+  metaTitle       String
+  metaDescription String
+  keywords        String?
+  ogImage         String?
+  robots          String   @default("index, follow")
+  schemaType      String?  @default("MedicalOrganization")
+  updatedAt       DateTime @updatedAt
+}
+
+model Branch {
+  id             String        @id @default(cuid())
+  name           String
+  slug           String        @unique
+  address        String
+  phone          String
+  emergencyPhone String
+  email          String
+  openingHours   String
+  mapUrl         String?
+  isActive       Boolean       @default(true)
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+  doctors        Doctor[]
+  appointments   Appointment[]
+}
+
+model Department {
+  id               String        @id @default(cuid())
+  name             String
+  slug             String        @unique
+  icon             String        @default("Stethoscope")
+  image            String
+  shortDesc        String
+  description      String
+  headOfDepartment String
+  featured         Boolean       @default(false)
+  status           String        @default("Active")
+  createdAt        DateTime      @default(now())
+  updatedAt        DateTime      @updatedAt
+  doctors          Doctor[]
+  services         Service[]
+  appointments     Appointment[]
+}
+
+model Doctor {
+  id              String         @id @default(cuid())
+  name            String
+  slug            String         @unique
+  photo           String
+  specialty       String
+  departmentId    String
+  branchId        String?
+  experience      String
+  qualification   String
+  visitingHours   String
+  consultationFee Float          @default(100.0)
+  phone           String
+  email           String
+  bio             String
+  facebook        String?
+  twitter         String?
+  linkedin        String?
+  instagram       String?
+  featured        Boolean        @default(true)
+  status          String         @default("Active")
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
+  department      Department     @relation(fields: [departmentId], references: [id], onDelete: Cascade)
+  branch          Branch?        @relation(fields: [branchId], references: [id], onDelete: SetNull)
+  schedules       Schedule[]
+  leaves          DoctorLeave[]
+  appointments    Appointment[]
+  prescriptions   Prescription[]
+}
+
+model Schedule {
+  id           String   @id @default(cuid())
+  doctorId     String
+  dayOfWeek    Int      // 0 = Sunday, 1 = Monday, ..., 6 = Saturday
+  startTime    String   // e.g. "09:00"
+  endTime      String   // e.g. "13:00"
+  slotDuration Int      @default(30) // in minutes
+  maxPatients  Int      @default(15)
+  isActive     Boolean  @default(true)
+  doctor       Doctor   @relation(fields: [doctorId], references: [id], onDelete: Cascade)
+}
+
+model DoctorLeave {
+  id        String   @id @default(cuid())
+  doctorId  String
+  startDate String   // "YYYY-MM-DD"
+  endDate   String   // "YYYY-MM-DD"
+  reason    String
+  status    String   @default("Approved")
+  createdAt DateTime @default(now())
+  doctor    Doctor   @relation(fields: [doctorId], references: [id], onDelete: Cascade)
+}
+
+model Holiday {
+  id          String   @id @default(cuid())
+  name        String
+  startDate   String   // "YYYY-MM-DD"
+  endDate     String   // "YYYY-MM-DD"
+  isRecurring Boolean  @default(false)
+  createdAt   DateTime @default(now())
+}
+
+model Service {
+  id           String     @id @default(cuid())
+  name         String
+  slug         String     @unique
+  icon         String     @default("Activity")
+  image        String
+  shortDesc    String
+  description  String
+  price        Float      @default(0.0)
+  departmentId String
+  featured     Boolean    @default(false)
+  status       String     @default("Published")
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+  department   Department @relation(fields: [departmentId], references: [id], onDelete: Cascade)
+}
+
+model Patient {
+  id               String          @id @default(cuid())
+  patientId        String          @unique // e.g. "MED-90214"
+  name             String
+  photo            String?
+  dob              String
+  gender           String
+  bloodGroup       String
+  phone            String
+  email            String
+  address          String
+  emergencyContact String
+  emergencyPhone   String
+  allergies        String?
+  medicalHistory   String?
+  createdAt        DateTime        @default(now())
+  updatedAt        DateTime        @updatedAt
+  appointments     Appointment[]
+  prescriptions    Prescription[]
+  reports          MedicalReport[]
+}
+
+model Appointment {
+  id                String         @id @default(cuid())
+  appointmentNumber String         @unique // e.g. "APT-2026-001"
+  patientId         String?
+  patientName       String
+  patientPhone      String
+  patientEmail      String
+  doctorId          String
+  departmentId      String
+  branchId          String?
+  appointmentDate   String         // "YYYY-MM-DD"
+  timeSlot          String         // e.g. "09:30 AM"
+  type              String         @default("In-person") // In-person, Video Consultation, Follow-up, Emergency
+  status            String         @default("Confirmed") // Pending, Confirmed, Completed, Cancelled, Rescheduled, No-show
+  notes             String?
+  paymentStatus     String         @default("Pending") // Pending, Paid, Refunded
+  createdAt         DateTime       @default(now())
+  updatedAt         DateTime       @updatedAt
+  patient           Patient?       @relation(fields: [patientId], references: [id], onDelete: SetNull)
+  doctor            Doctor         @relation(fields: [doctorId], references: [id], onDelete: Cascade)
+  department        Department     @relation(fields: [departmentId], references: [id], onDelete: Cascade)
+  branch            Branch?        @relation(fields: [branchId], references: [id], onDelete: SetNull)
+  prescriptions     Prescription[]
+  payments          Payment[]
+}
+
+model Prescription {
+  id                 String             @id @default(cuid())
+  prescriptionNumber String             @unique // e.g. "RX-88412"
+  appointmentId      String?
+  patientId          String
+  doctorId           String
+  diagnosis          String
+  instructions       String?
+  followUpDate       String?
+  createdAt          DateTime           @default(now())
+  updatedAt          DateTime           @updatedAt
+  appointment        Appointment?       @relation(fields: [appointmentId], references: [id], onDelete: SetNull)
+  patient            Patient            @relation(fields: [patientId], references: [id], onDelete: Cascade)
+  doctor             Doctor             @relation(fields: [doctorId], references: [id], onDelete: Cascade)
+  items              PrescriptionItem[]
+}
+
+model PrescriptionItem {
+  id             String       @id @default(cuid())
+  prescriptionId String
+  medicineName   String
+  dosage         String       // e.g. "500mg"
+  frequency      String       // e.g. "1-0-1 after meals"
+  duration       String       // e.g. "7 days"
+  instructions   String?
+  prescription   Prescription @relation(fields: [prescriptionId], references: [id], onDelete: Cascade)
+}
+
+model MedicalReport {
+  id           String   @id @default(cuid())
+  reportNumber String   @unique // e.g. "REP-55102"
+  patientId    String
+  title        String
+  category     String   // Blood Test, Radiology, Pathology, Cardiology, MRI/CT
+  fileUrl      String
+  testDate     String
+  doctorName   String
+  notes        String?
+  createdAt    DateTime @default(now())
+  patient      Patient  @relation(fields: [patientId], references: [id], onDelete: Cascade)
+}
+
+model Payment {
+  id            String       @id @default(cuid())
+  transactionId String       @unique
+  appointmentId String?
+  patientName   String
+  amount        Float
+  currency      String       @default("USD")
+  gateway       String       @default("Stripe") // Stripe, PayPal, Razorpay, SSLCommerz, Cash
+  status        String       @default("Paid") // Pending, Paid, Failed, Refunded
+  paymentDate   DateTime     @default(now())
+  createdAt     DateTime     @default(now())
+  appointment   Appointment? @relation(fields: [appointmentId], references: [id], onDelete: SetNull)
+}
+
+model Lead {
+  id                String    @id @default(cuid())
+  name              String
+  phone             String
+  email             String
+  source            String    @default("Contact Form") // Appointment, Contact form, Callback request, WhatsApp, Consultation, Health package, Career application, Newsletter
+  interestedService String?
+  assignedStaff     String?   @default("Front Desk")
+  status            String    @default("New") // New, Contacted, Qualified, Appointment Booked, Converted, Lost
+  notes             String?
+  followUpDate      String?
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+}
+
+model ContactMessage {
+  id        String   @id @default(cuid())
+  name      String
+  email     String
+  phone     String?
+  subject   String
+  message   String
+  status    String   @default("New") // New, Read, Replied
+  createdAt DateTime @default(now())
+}
+
+model BlogPost {
+  id            String   @id @default(cuid())
+  title         String
+  slug          String   @unique
+  featuredImage String
+  category      String
+  tags          String   // Comma separated
+  author        String   @default("Medical Editorial Team")
+  shortDesc     String
+  content       String
+  status        String   @default("Published") // Draft, Published, Scheduled, Archived
+  views         Int      @default(0)
+  publishedAt   DateTime @default(now())
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+}
+
+model BlogCategory {
+  id        String @id @default(cuid())
+  name      String @unique
+  slug      String @unique
+  postCount Int    @default(0)
+}
+
+model GalleryItem {
+  id           String   @id @default(cuid())
+  title        String
+  category     String   // Hospital, Doctors, Facilities, Events, Equipment, Surgeries
+  mediaType    String   @default("image") // "image" or "video"
+  imageUrl     String
+  videoUrl     String?  // YouTube embed, Vimeo, or direct MP4
+  description  String?
+  displayOrder Int      @default(0)
+  isActive     Boolean  @default(true)
+  createdAt    DateTime @default(now())
+}
+
+model Testimonial {
+  id           String   @id @default(cuid())
+  patientName  String
+  patientRole  String?  @default("Patient")
+  photo        String?
+  review       String
+  rating       Int      @default(5)
+  department   String
+  isApproved   Boolean  @default(true)
+  isFeatured   Boolean  @default(true)
+  displayOrder Int      @default(0)
+  createdAt    DateTime @default(now())
+}
+
+model Faq {
+  id           String   @id @default(cuid())
+  question     String
+  answer       String
+  category     String   @default("General")
+  displayOrder Int      @default(0)
+  isActive     Boolean  @default(true)
+  createdAt    DateTime @default(now())
+}
+
+model HealthPackage {
+  id            String   @id @default(cuid())
+  name          String
+  slug          String   @unique
+  price         Float
+  discount      Float    @default(0.0)
+  originalPrice Float
+  testsIncluded String   // JSON or newline separated list
+  description   String
+  duration      String   @default("2-3 Hours")
+  availability  String   @default("Daily 8 AM - 12 PM")
+  image         String
+  isFeatured    Boolean  @default(true)
+  status        String   @default("Active")
+  createdAt     DateTime @default(now())
+}
+
+model BloodInventory {
+  id             String   @id @default(cuid())
+  bloodGroup     String   @unique // A+, A-, B+, B-, AB+, AB-, O+, O-
+  unitsAvailable Int      @default(0)
+  status         String   @default("Normal") // Normal, Critical, Adequate
+  lastUpdated    DateTime @default(now())
+}
+
+model BloodRequest {
+  id            String   @id @default(cuid())
+  patientName   String
+  bloodGroup    String
+  unitsRequired Int
+  hospital      String
+  contactPhone  String
+  status        String   @default("Pending") // Pending, Fulfilled, In Progress
+  requestDate   DateTime @default(now())
+}
+
+model Ambulance {
+  id            String   @id @default(cuid())
+  vehicleNumber String   @unique
+  ambulanceType String   // ICU Mobile Unit, Basic Life Support, Advanced Cardiac
+  driverName    String
+  driverPhone   String
+  serviceArea   String
+  isAvailable   Boolean  @default(true)
+  createdAt     DateTime @default(now())
+}
+
+model JobPosting {
+  id                 String           @id @default(cuid())
+  title              String
+  slug               String           @unique
+  department         String
+  location           String           @default("Main Hospital Campus")
+  employmentType     String           @default("Full-time")
+  salaryRange        String?
+  experienceRequired String
+  deadline           String
+  description        String
+  requirements       String
+  responsibilities   String
+  status             String           @default("Open") // Open, Closed
+  createdAt          DateTime         @default(now())
+  applications       JobApplication[]
+}
+
+model JobApplication {
+  id           String     @id @default(cuid())
+  jobPostingId String
+  name         String
+  email        String
+  phone        String
+  coverLetter  String?
+  cvUrl        String?
+  status       String     @default("New") // New, Reviewing, Shortlisted, Interview, Selected, Rejected
+  appliedAt    DateTime   @default(now())
+  jobPosting   JobPosting @relation(fields: [jobPostingId], references: [id], onDelete: Cascade)
+}
+
+model NewsletterSubscriber {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  category  String   @default("All Updates")
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+}
+
+model Notification {
+  id        String   @id @default(cuid())
+  title     String
+  message   String
+  type      String   @default("System") // Appointment, Lead, Payment, System
+  isRead    Boolean  @default(false)
+  link      String?
+  createdAt DateTime @default(now())
+}

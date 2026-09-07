@@ -1,0 +1,73 @@
+import { NextResponse } from 'next/server';
+import { prisma } from '@/lib/db';
+
+export async function GET() {
+  try {
+    const packages = await prisma.healthPackage.findMany({
+      where: { status: 'Active' },
+      orderBy: { price: 'asc' },
+    });
+    return NextResponse.json(packages);
+  } catch (error) {
+    return NextResponse.json({ error: 'Failed to fetch packages' }, { status: 500 });
+  }
+}
+
+export async function POST(request: Request) {
+  try {
+    const body = await request.json();
+    const slug = body.name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)+/g, '');
+
+    const pkg = await prisma.healthPackage.create({
+      data: {
+        name: body.name,
+        slug: body.slug || slug,
+        price: parseFloat(body.price),
+        discount: parseFloat(body.discount) || 0,
+        originalPrice: parseFloat(body.originalPrice) || parseFloat(body.price),
+        testsIncluded: body.testsIncluded,
+        description: body.description,
+        duration: body.duration || '2-3 Hours',
+        availability: body.availability || 'Daily 8 AM - 12 PM',
+        image: body.image || 'https://images.unsplash.com/photo-1579154204601-01588f351e67?auto=format&fit=crop&w=800&q=80',
+        isFeatured: Boolean(body.isFeatured),
+        status: body.status || 'Active',
+      },
+    });
+
+    return NextResponse.json(pkg);
+  } catch (error: any) {
+    return NextResponse.json({ error: error.message || 'Failed to create package' }, { status: 400 });
+  }
+}
+
+export async function PUT(request: Request) {
+  try {
+    const body = await request.json();
+    const { id, ...data } = body;
+    if (data.price) data.price = parseFloat(data.price);
+    if (data.originalPrice) data.originalPrice = parseFloat(data.originalPrice);
+    if (data.discount) data.discount = parseFloat(data.discount);
+
+    const updated = await prisma.healthPackage.update({
+      where: { id },
+      data,
+    });
+    return NextResponse.json(updated);
+  } catch (error: any) {
+    return NextResponse.json({ error: error.message || 'Failed to update package' }, { status: 400 });
+  }
+}
+
+export async function DELETE(request: Request) {
+  try {
+    const { searchParams } = new URL(request.url);
+    const id = searchParams.get('id');
+    if (!id) return NextResponse.json({ error: 'Package ID required' }, { status: 400 });
+
+    await prisma.healthPackage.delete({ where: { id } });
+    return NextResponse.json({ success: true });
+  } catch (error: any) {
+    return NextResponse.json({ error: error.message || 'Failed to delete package' }, { status: 400 });
+  }
+}
