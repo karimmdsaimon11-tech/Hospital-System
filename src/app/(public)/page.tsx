@@ -29,44 +29,57 @@ import NewsletterForm from '@/components/home/NewsletterForm';
 export const revalidate = 0; // Ensures database changes appear instantly on refresh!
 
 export default async function HomePage() {
-  // Fetch live database data
-  const [
-    settings,
-    departments,
-    doctors,
-    services,
-    packages,
-    testimonials,
-    blogPosts,
-    ambulances,
-  ] = await Promise.all([
-    prisma.globalSetting.findUnique({ where: { id: 'default' } }),
-    prisma.department.findMany({ where: { status: 'Active' }, orderBy: { name: 'asc' } }),
-    prisma.doctor.findMany({
-      where: { status: 'Active' },
-      include: { department: true },
-      orderBy: { name: 'asc' },
-    }),
-    prisma.service.findMany({
-      where: { status: 'Published' },
-      include: { department: true },
-      take: 6,
-    }),
-    prisma.healthPackage.findMany({
-      where: { status: 'Active' },
-      take: 4,
-    }),
-    prisma.testimonial.findMany({
-      where: { isApproved: true },
-      orderBy: { displayOrder: 'asc' },
-    }),
-    prisma.blogPost.findMany({
-      where: { status: 'Published' },
-      orderBy: { publishedAt: 'desc' },
-      take: 3,
-    }),
-    prisma.ambulance.findMany({ take: 3 }),
-  ]);
+  // Fetch live database data safely
+  let settings: any = null;
+  let departments: any[] = [];
+  let doctors: any[] = [];
+  let services: any[] = [];
+  let packages: any[] = [];
+  let testimonials: any[] = [];
+  let blogPosts: any[] = [];
+  let ambulances: any[] = [];
+
+  try {
+    const results = await Promise.all([
+      prisma.globalSetting.findUnique({ where: { id: 'default' } }),
+      prisma.department.findMany({ where: { status: 'Active' }, orderBy: { name: 'asc' } }),
+      prisma.doctor.findMany({
+        where: { status: 'Active' },
+        include: { department: true },
+        orderBy: { name: 'asc' },
+      }),
+      prisma.service.findMany({
+        where: { status: 'Published' },
+        include: { department: true },
+        take: 6,
+      }),
+      prisma.healthPackage.findMany({
+        where: { status: 'Active' },
+        take: 4,
+      }),
+      prisma.testimonial.findMany({
+        where: { isApproved: true },
+        orderBy: { displayOrder: 'asc' },
+      }),
+      prisma.blogPost.findMany({
+        where: { status: 'Published' },
+        orderBy: { publishedAt: 'desc' },
+        take: 3,
+      }),
+      prisma.ambulance.findMany({ take: 3 }),
+    ]);
+
+    settings = results[0];
+    departments = results[1] || [];
+    doctors = results[2] || [];
+    services = results[3] || [];
+    packages = results[4] || [];
+    testimonials = results[5] || [];
+    blogPosts = results[6] || [];
+    ambulances = results[7] || [];
+  } catch (err) {
+    console.error('Database query error on HomePage:', err);
+  }
 
   const globalInfo = settings || {
     hospitalName: 'MedicalPress Hospital',
