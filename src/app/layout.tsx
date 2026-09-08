@@ -24,14 +24,8 @@ export default function RootLayout({
     <html lang="en">
       <head>
         {/* Adsterra Ad Scripts */}
-        <Script
-          src="https://pl31231098.profitableratecpmnetwork.com/2e/c1/8b/2ec18bfe189793d1898f34ae2cd960a5.js"
-          strategy="afterInteractive"
-        />
-        <Script
-          src="https://pl31231099.profitableratecpmnetwork.com/ab/fd/6d/abfd6d1e41423b49bab1e2df344f3bba.js"
-          strategy="afterInteractive"
-        />
+        <script type="text/javascript" src="https://pl31231098.profitableratecpmnetwork.com/2e/c1/8b/2ec18bfe189793d1898f34ae2cd960a5.js" async></script>
+        <script type="text/javascript" src="https://pl31231099.profitableratecpmnetwork.com/ab/fd/6d/abfd6d1e41423b49bab1e2df344f3bba.js" async></script>
       </head>
       <body className="antialiased min-h-screen flex flex-col bg-background text-text-primary">
         <LanguageProvider>
