@@ -181,13 +181,10 @@ export default async function HomePage() {
                 <div className="relative rounded-2xl overflow-hidden border-2 border-white/10 shadow-2xl bg-dark-card aspect-[4/5] flex items-center justify-center">
                   {globalInfo.heroDoctorImage ? (
                     <>
-                      <Image
+                      <img
                         src={globalInfo.heroDoctorImage}
                         alt={globalInfo.heroDoctorName || "Doctor Profile"}
-                        fill
-                        priority
-                        sizes="(max-width: 1024px) 100vw, 40vw"
-                        className="object-cover object-top"
+                        className="w-full h-full object-cover object-top"
                       />
                       {globalInfo.heroDoctorName && (
                         <div className="absolute bottom-4 left-4 right-4 p-4 rounded-xl bg-dark/80 backdrop-blur-md border border-white/15 text-white flex items-center justify-between">

@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { 
   Globe, 
@@ -15,11 +15,17 @@ import {
   User,
   Image as ImageIcon,
   Trash2,
-  Sparkles
+  Sparkles,
+  UploadCloud,
+  Upload,
+  RefreshCw
 } from 'lucide-react';
 
 export default function AdminGlobalContentPage() {
   const router = useRouter();
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [uploading, setUploading] = useState(false);
+  const [uploadError, setUploadError] = useState('');
   const [doctorList, setDoctorList] = useState<any[]>([]);
   const [formData, setFormData] = useState({
     hospitalName: 'Green Shifa Hospital',
@@ -75,6 +81,60 @@ export default function AdminGlobalContentPage() {
   useEffect(() => {
     loadSettings();
   }, []);
+
+  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (!file.type.startsWith('image/')) {
+      setUploadError('Please select a valid image file (JPG, PNG, WEBP).');
+      return;
+    }
+
+    setUploading(true);
+    setUploadError('');
+
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      const img = new Image();
+      img.onload = () => {
+        // Optimize and resize image with Canvas (max width 900px, 85% JPEG)
+        const canvas = document.createElement('canvas');
+        const MAX_WIDTH = 900;
+        const MAX_HEIGHT = 1125; // 4:5 ratio
+        let width = img.width;
+        let height = img.height;
+
+        if (width > MAX_WIDTH || height > MAX_HEIGHT) {
+          const ratio = Math.min(MAX_WIDTH / width, MAX_HEIGHT / height);
+          width = Math.round(width * ratio);
+          height = Math.round(height * ratio);
+        }
+
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext('2d');
+        if (ctx) {
+          ctx.drawImage(img, 0, 0, width, height);
+          const compressedDataUrl = canvas.toDataURL('image/jpeg', 0.85);
+          setFormData((prev) => ({ ...prev, heroDoctorImage: compressedDataUrl }));
+        } else {
+          setFormData((prev) => ({ ...prev, heroDoctorImage: event.target?.result as string }));
+        }
+        setUploading(false);
+      };
+      img.onerror = () => {
+        setUploadError('Failed to process image file.');
+        setUploading(false);
+      };
+      img.src = event.target?.result as string;
+    };
+    reader.onerror = () => {
+      setUploadError('Failed to read file from your device.');
+      setUploading(false);
+    };
+    reader.readAsDataURL(file);
+  };
 
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -185,12 +245,93 @@ export default function AdminGlobalContentPage() {
           <div className="grid grid-cols-1 md:grid-cols-12 gap-6 items-start">
             {/* Form Fields */}
             <div className="md:col-span-8 space-y-4">
+              {/* Hidden File Input */}
+              <input
+                type="file"
+                ref={fileInputRef}
+                accept="image/*"
+                onChange={handleFileUpload}
+                className="hidden"
+              />
+
+              {/* Upload Dropzone / Photo Status */}
+              <div>
+                <label className="block font-bold text-dark text-sm mb-2 flex items-center justify-between">
+                  <span>Upload Doctor Photo</span>
+                  {uploading && <span className="text-xs text-primary animate-pulse">Processing...</span>}
+                </label>
+
+                {uploadError && (
+                  <div className="mb-3 p-3 bg-rose-50 border border-rose-200 text-rose-700 text-xs rounded-xl flex items-center space-x-2">
+                    <AlertCircle className="w-4 h-4 shrink-0 text-rose-500" />
+                    <span>{uploadError}</span>
+                  </div>
+                )}
+
+                {!formData.heroDoctorImage ? (
+                  /* Empty state - Big Upload Box */
+                  <div
+                    onClick={() => fileInputRef.current?.click()}
+                    className="border-2 border-dashed border-gray-300 hover:border-primary bg-gray-50/50 hover:bg-primary/[0.03] rounded-2xl p-6 flex flex-col items-center justify-center cursor-pointer transition text-center group"
+                  >
+                    <div className="w-14 h-14 rounded-2xl bg-primary/10 text-primary flex items-center justify-center mb-3 group-hover:scale-110 transition shadow-sm">
+                      <UploadCloud className="w-7 h-7" />
+                    </div>
+                    <span className="text-sm font-black text-dark group-hover:text-primary transition">
+                      {uploading ? 'Compressing & Loading Photo...' : 'Click Here to Upload Photo from Computer / Phone'}
+                    </span>
+                    <span className="text-xs text-text-secondary mt-1">
+                      Supports JPG, PNG, WEBP. Photo will be automatically optimized for the website.
+                    </span>
+                    <span className="mt-3 px-3 py-1 bg-white border border-gray-200 rounded-lg text-[11px] font-bold text-gray-600 group-hover:border-primary group-hover:text-primary transition">
+                      📁 Browse Files
+                    </span>
+                  </div>
+                ) : (
+                  /* Uploaded state - Success Bar with Change & Remove */
+                  <div className="p-4 rounded-2xl bg-emerald-50 border border-emerald-200 flex flex-col sm:flex-row items-center justify-between gap-3">
+                    <div className="flex items-center space-x-3.5">
+                      <div className="w-12 h-14 rounded-xl overflow-hidden border border-emerald-300 bg-white shadow-sm shrink-0">
+                        <img src={formData.heroDoctorImage} alt="Uploaded" className="w-full h-full object-cover object-top" />
+                      </div>
+                      <div>
+                        <div className="text-xs font-black text-emerald-800 flex items-center gap-1.5">
+                          <CheckCircle2 className="w-4 h-4 text-emerald-600" />
+                          <span>Photo Uploaded Successfully</span>
+                        </div>
+                        <p className="text-[11px] text-emerald-700 mt-0.5">
+                          Click Save below to publish this photo onto the live homepage!
+                        </p>
+                      </div>
+                    </div>
+                    <div className="flex items-center space-x-2 shrink-0">
+                      <button
+                        type="button"
+                        onClick={() => fileInputRef.current?.click()}
+                        className="px-3.5 py-2 bg-white hover:bg-gray-50 border border-gray-300 hover:border-primary text-dark hover:text-primary rounded-xl text-xs font-bold transition flex items-center gap-1.5 shadow-xs"
+                      >
+                        <Upload className="w-3.5 h-3.5" />
+                        <span>Change Photo</span>
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setFormData({ ...formData, heroDoctorImage: '' })}
+                        className="px-3.5 py-2 bg-rose-50 hover:bg-rose-100 border border-rose-200 text-rose-600 rounded-xl text-xs font-bold transition flex items-center gap-1.5"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                        <span>Remove</span>
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
+
               {/* Quick Select from existing Doctors */}
               {doctorList.length > 0 && (
-                <div>
+                <div className="pt-2 border-t border-gray-100">
                   <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1.5 flex items-center space-x-1.5">
                     <Sparkles className="w-3.5 h-3.5 text-primary" />
-                    <span>Quick Select From Hospital Doctors</span>
+                    <span>Or Pick From Hospital Doctors List</span>
                   </label>
                   <select
                     onChange={(e) => {
@@ -207,7 +348,7 @@ export default function AdminGlobalContentPage() {
                     defaultValue=""
                     className="w-full px-3.5 py-2.5 rounded-lg border border-gray-300 text-dark text-sm bg-white"
                   >
-                    <option value="" disabled>-- Pick a doctor to auto-fill --</option>
+                    <option value="" disabled>-- Pick registered doctor --</option>
                     {doctorList.map((doc) => (
                       <option key={doc.id} value={doc.id}>
                         {doc.name} ({doc.specialty})
@@ -216,24 +357,6 @@ export default function AdminGlobalContentPage() {
                   </select>
                 </div>
               )}
-
-              <div>
-                <label className="block font-bold text-dark text-sm mb-1">
-                  Doctor Photo URL
-                </label>
-                <div className="relative">
-                  <input
-                    type="url"
-                    placeholder="https://images.unsplash.com/... or paste your image URL"
-                    value={formData.heroDoctorImage}
-                    onChange={(e) => setFormData({ ...formData, heroDoctorImage: e.target.value })}
-                    className="w-full px-3.5 py-2.5 rounded-lg border border-gray-300 text-dark text-sm"
-                  />
-                </div>
-                <p className="text-[11px] text-gray-400 mt-1">
-                  Leave this input empty if you want the shape on the homepage to remain completely empty.
-                </p>
-              </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
