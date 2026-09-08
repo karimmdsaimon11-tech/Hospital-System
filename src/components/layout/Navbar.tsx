@@ -54,28 +54,18 @@ export default function Navbar() {
   const { language, setLanguage, t } = useLanguage();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [langDropdownOpen, setLangDropdownOpen] = useState(false);
-  const [moreDropdownOpen, setMoreDropdownOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   
-  // Secure Management & Director Login State
-  const [adminModalOpen, setAdminModalOpen] = useState(false);
-  const [loginEmail, setLoginEmail] = useState('');
-  const [loginPassword, setLoginPassword] = useState('');
-  const [showPassword, setShowPassword] = useState(false);
-  const [adminLoggingIn, setAdminLoggingIn] = useState(false);
-  const [loginError, setLoginError] = useState('');
-
-  const moreDropdownRef = useRef<HTMLDivElement>(null);
   const langDropdownRef = useRef<HTMLDivElement>(null);
 
   const [settings, setSettings] = useState<GlobalInfo>({
     phone: '+1-800-654-3210',
     emergencyPhone: '+1-800-999-HELP',
     openingHours: 'Mon - Sat: 8:00 AM - 9:00 PM',
-    announcementText: 'Welcome to MedicalPress — Advanced Healthcare & Compassionate Care',
+    announcementText: 'Welcome to Green Shifa Hospital — Advanced Healthcare & Compassionate Care',
     announcementActive: true,
-    hospitalName: 'MedicalPress',
+    hospitalName: 'Green Shifa Hospital',
     tagline: 'Advanced Healthcare & Compassionate Care',
   });
 
@@ -89,9 +79,9 @@ export default function Navbar() {
             phone: data.phone || '+1-800-654-3210',
             emergencyPhone: data.emergencyPhone || '+1-800-999-HELP',
             openingHours: data.openingHours || 'Mon - Sat: 8:00 AM - 9:00 PM',
-            announcementText: data.announcementText || 'Welcome to MedicalPress — Advanced Healthcare & Compassionate Care',
+            announcementText: data.announcementText || 'Welcome to Green Shifa Hospital — Advanced Healthcare & Compassionate Care',
             announcementActive: data.announcementActive !== false,
-            hospitalName: data.hospitalName || 'MedicalPress',
+            hospitalName: data.hospitalName || 'Green Shifa Hospital',
             tagline: data.tagline || 'Advanced Healthcare & Compassionate Care',
           });
         }
@@ -118,9 +108,6 @@ export default function Navbar() {
   // Close dropdowns on outside click
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
-      if (moreDropdownRef.current && !moreDropdownRef.current.contains(event.target as Node)) {
-        setMoreDropdownOpen(false);
-      }
       if (langDropdownRef.current && !langDropdownRef.current.contains(event.target as Node)) {
         setLangDropdownOpen(false);
       }
@@ -129,55 +116,16 @@ export default function Navbar() {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  // Secure Management & Director Login Submit
-  const handleAdminSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setAdminLoggingIn(true);
-    setLoginError('');
-    try {
-      const res = await fetch('/api/auth/login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email: loginEmail, password: loginPassword }),
-      });
-      const data = await res.json();
-      if (res.ok) {
-        setAdminModalOpen(false);
-        setLoginEmail('');
-        setLoginPassword('');
-        router.push('/admin');
-      } else {
-        setLoginError(data.error || 'Access Denied: Invalid User ID or Password.');
-      }
-    } catch (err) {
-      setLoginError('Authentication server error. Please try again.');
-    } finally {
-      setAdminLoggingIn(false);
-    }
-  };
-
   // Primary navigation links shown directly on desktop navbar
   const primaryLinks = [
-    { name: t.home, href: '/' },
-    { name: t.doctors, href: '/doctors' },
-    { name: t.departments, href: '/departments' },
-    { name: t.services, href: '/services' },
-    { name: t.healthPackages, href: '/packages' },
-    { name: t.emergency, href: '/emergency' },
-  ];
-
-  // Comprehensive secondary links grouped neatly inside the "More" dropdown
-  const moreLinks = [
-    { name: t.bloodBank, href: '/blood-bank', desc: '8 blood groups & emergency requisition', icon: Droplet },
-    { name: 'Photo & Video Gallery', href: '/gallery', desc: 'Surgical suites, equipment & video tours', icon: ImageIcon },
-    { name: t.news, href: '/blog', desc: 'Medical research, doctor advice & articles', icon: Newspaper },
-    { name: t.testimonials, href: '/testimonials', desc: 'Real patient stories & reviews', icon: Star },
-    { name: t.faq, href: '/faq', desc: 'Frequently asked medical & insurance questions', icon: HelpCircle },
-    { name: t.careers, href: '/careers', desc: 'Clinical vacancies & online CV application', icon: Briefcase },
-    { name: t.about, href: '/about', desc: 'Hospital history, mission & leadership', icon: Building },
-    { name: t.contact, href: '/contact', desc: 'Campus addresses, maps & phone lines', icon: MapPin },
-    { name: 'UI Component Showcase (Sec 66)', href: '/component-showcase', desc: 'Section 66 design system reference', icon: Layers },
-    { name: 'Editorial Blog Layout (Sec 67)', href: '/blog-component', desc: 'Section 67 bullet & tab blog layout', icon: Code2 },
+    { name: t.home || 'Home', href: '/' },
+    { name: t.doctors || 'Doctors', href: '/doctors' },
+    { name: t.departments || 'Departments', href: '/departments' },
+    { name: t.services || 'Services', href: '/services' },
+    { name: t.healthPackages || 'Health Packages', href: '/packages' },
+    { name: t.bloodBank || 'Blood Bank', href: '/blood-bank' },
+    { name: t.about || 'About', href: '/about' },
+    { name: t.contact || 'Contact', href: '/contact' },
   ];
 
   const languages: { code: Language; label: string; flag: string }[] = [
@@ -186,7 +134,6 @@ export default function Navbar() {
     { code: 'ar', label: 'العربية', flag: '🇸🇦' },
   ];
 
-  const isMoreActive = moreLinks.some((l) => pathname === l.href);
 
   return (
     <header className="w-full sticky top-0 z-50 bg-white shadow-sm border-b border-gray-100">
@@ -306,68 +253,9 @@ export default function Navbar() {
               );
             })}
 
-            {/* "More ▾" Mega Dropdown */}
-            <div className="relative" ref={moreDropdownRef}>
-              <button
-                onClick={() => setMoreDropdownOpen(!moreDropdownOpen)}
-                className={`px-3 py-2 text-sm font-bold rounded-xl transition flex items-center space-x-1 whitespace-nowrap ${
-                  isMoreActive || moreDropdownOpen
-                    ? 'text-primary bg-primary/10'
-                    : 'text-text-primary hover:text-primary hover:bg-gray-50'
-                }`}
-              >
-                <span>More</span>
-                <ChevronDown
-                  className={`w-3.5 h-3.5 transition-transform duration-200 ${
-                    moreDropdownOpen ? 'rotate-180 text-primary' : 'text-gray-400'
-                  }`}
-                />
-              </button>
-
-              {/* Dropdown Menu (2-Column Grid) */}
-              {moreDropdownOpen && (
-                <div className="absolute left-0 mt-2 w-96 bg-white rounded-2xl shadow-2xl border border-gray-100 p-3 z-50 animate-fadeIn">
-                  <div className="text-[10px] font-black uppercase tracking-wider text-gray-400 px-2.5 py-1 mb-1 border-b border-gray-100">
-                    Hospital Resources & System Pages
-                  </div>
-                  <div className="grid grid-cols-1 gap-1 max-h-[70vh] overflow-y-auto pr-1">
-                    {moreLinks.map((link) => {
-                      const Icon = link.icon;
-                      const isActive = pathname === link.href;
-                      return (
-                        <Link
-                          key={link.href}
-                          href={link.href}
-                          onClick={() => setMoreDropdownOpen(false)}
-                          className={`flex items-start space-x-2.5 p-2 rounded-xl transition ${
-                            isActive
-                              ? 'bg-primary/10 text-primary'
-                              : 'hover:bg-gray-50 text-gray-700'
-                          }`}
-                        >
-                          <div
-                            className={`p-1.5 rounded-lg shrink-0 mt-0.5 ${
-                              isActive ? 'bg-primary text-white' : 'bg-gray-100 text-gray-600'
-                            }`}
-                          >
-                            <Icon className="w-3.5 h-3.5" />
-                          </div>
-                          <div>
-                            <div className="text-xs font-bold leading-tight">{link.name}</div>
-                            <div className="text-[10px] text-text-secondary leading-snug mt-0.5 line-clamp-1">
-                              {link.desc}
-                            </div>
-                          </div>
-                        </Link>
-                      );
-                    })}
-                  </div>
-                </div>
-              )}
-            </div>
           </nav>
 
-          {/* Right Action Controls: Search + Book Appointment + ADMIN GATEWAY BUTTON */}
+          {/* Right Action Controls: Search + Book Appointment */}
           <div className="hidden sm:flex items-center space-x-2.5 shrink-0">
             {/* Search Trigger */}
             <button
@@ -386,27 +274,10 @@ export default function Navbar() {
               <Calendar className="w-4 h-4" />
               <span>{t.bookAppointment}</span>
             </Link>
-
-            {/* ADMIN SECTION BUTTON (Directly beside Book Appointment) */}
-            <button
-              onClick={() => setAdminModalOpen(true)}
-              className="flex items-center space-x-1.5 px-3.5 py-2.5 rounded-xl bg-[#202B33] hover:bg-black text-white font-bold text-xs shadow-md shadow-dark/20 border border-gray-700 transition transform active:scale-95 whitespace-nowrap group"
-              title="Hospital Staff & Admin Login"
-            >
-              <ShieldCheck className="w-4 h-4 text-emerald-400 group-hover:scale-110 transition" />
-              <span>Admin Portal</span>
-            </button>
           </div>
 
           {/* Mobile Hamburger Button */}
           <div className="flex lg:hidden items-center space-x-2">
-            <button
-              onClick={() => setAdminModalOpen(true)}
-              className="p-2 rounded-xl bg-[#202B33] text-emerald-400 text-xs font-bold"
-              title="Admin Portal"
-            >
-              <ShieldCheck className="w-4 h-4" />
-            </button>
             <Link
               href="/appointment"
               className="flex items-center space-x-1 px-3 py-2 rounded-xl bg-primary text-white text-xs font-bold shadow-sm"
@@ -457,117 +328,6 @@ export default function Navbar() {
         </div>
       )}
 
-      {/* 4. MANAGEMENT DIRECTOR & ADMIN SECURE LOGIN MODAL */}
-      {adminModalOpen && (
-        <div className="fixed inset-0 z-50 bg-dark/75 backdrop-blur-md flex items-center justify-center p-4">
-          <div className="bg-white rounded-3xl w-full max-w-md overflow-hidden shadow-2xl border border-gray-100 animate-fadeIn">
-            {/* Modal Header */}
-            <div className="bg-[#1E293B] p-5 text-white flex items-center justify-between border-b border-gray-700">
-              <div className="flex items-center space-x-3">
-                <div className="w-10 h-10 rounded-xl bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 flex items-center justify-center font-bold">
-                  <ShieldCheck className="w-5 h-5" />
-                </div>
-                <div>
-                  <h3 className="text-sm font-black text-white">Management & Director Gateway</h3>
-                  <p className="text-[11px] text-gray-400">Hospital Administration & Executive Portal</p>
-                </div>
-              </div>
-              <button
-                onClick={() => {
-                  setAdminModalOpen(false);
-                  setLoginError('');
-                }}
-                className="text-gray-400 hover:text-white p-1 rounded-lg transition"
-              >
-                <X className="w-5 h-5" />
-              </button>
-            </div>
-
-            {/* Modal Content */}
-            <div className="p-6 space-y-4 text-xs">
-              <div className="flex items-center space-x-2 text-[11px] text-gray-500 bg-gray-50 p-2.5 rounded-xl border border-gray-200">
-                <Lock className="w-4 h-4 text-primary shrink-0" />
-                <span>Restricted Access: Authorized Hospital Directors & Staff only. Credentials are confidential.</span>
-              </div>
-
-              {loginError && (
-                <div className="p-3 bg-rose-50 border border-rose-200 text-rose-700 rounded-xl text-xs font-semibold flex items-center space-x-2">
-                  <AlertCircle className="w-4 h-4 shrink-0 text-rose-500" />
-                  <span>{loginError}</span>
-                </div>
-              )}
-
-              {/* Secure Login Form */}
-              <form onSubmit={handleAdminSubmit} className="space-y-4 text-xs">
-                <div>
-                  <label className="block text-[11px] font-bold text-dark mb-1">
-                    Management User ID / Email
-                  </label>
-                  <div className="relative">
-                    <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-                    <input
-                      type="email"
-                      required
-                      placeholder="Enter authorized user ID / email..."
-                      value={loginEmail}
-                      onChange={(e) => setLoginEmail(e.target.value)}
-                      className="w-full pl-9 pr-3 py-2.5 border border-gray-200 rounded-xl text-xs focus:border-primary focus:outline-none transition"
-                      autoFocus
-                    />
-                  </div>
-                </div>
-
-                <div>
-                  <label className="block text-[11px] font-bold text-dark mb-1">
-                    Security Password
-                  </label>
-                  <div className="relative">
-                    <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-                    <input
-                      type={showPassword ? 'text' : 'password'}
-                      required
-                      placeholder="Enter security password..."
-                      value={loginPassword}
-                      onChange={(e) => setLoginPassword(e.target.value)}
-                      className="w-full pl-9 pr-10 py-2.5 border border-gray-200 rounded-xl text-xs focus:border-primary focus:outline-none transition font-mono"
-                    />
-                    <button
-                      type="button"
-                      onClick={() => setShowPassword(!showPassword)}
-                      className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-dark transition p-1"
-                      title={showPassword ? 'Hide password' : 'Show password'}
-                    >
-                      {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                    </button>
-                  </div>
-                </div>
-
-                <button
-                  type="submit"
-                  disabled={adminLoggingIn}
-                  className="w-full py-3 bg-[#202B33] hover:bg-black text-white rounded-xl font-black shadow-lg shadow-dark/20 flex items-center justify-center space-x-2 transition text-xs disabled:opacity-50"
-                >
-                  <Key className="w-4 h-4 text-emerald-400" />
-                  <span>{adminLoggingIn ? 'Verifying Authorization...' : '🔒 Authenticate & Access Admin Panel'}</span>
-                </button>
-              </form>
-
-              {/* Bottom Info */}
-              <div className="pt-2 border-t border-gray-100 flex items-center justify-between text-[11px]">
-                <span className="text-gray-400">256-Bit SSL Encrypted Session</span>
-                <Link
-                  href="/admin/login"
-                  onClick={() => setAdminModalOpen(false)}
-                  className="text-primary font-bold hover:underline flex items-center gap-1"
-                >
-                  <span>Full Login Page</span>
-                  <ChevronRight className="w-3.5 h-3.5" />
-                </Link>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
 
       {/* 5. MOBILE SLIDE-OUT DRAWER */}
       {mobileMenuOpen && (
@@ -593,16 +353,6 @@ export default function Navbar() {
                 ))}
               </div>
             </div>
-            <button
-              onClick={() => {
-                setMobileMenuOpen(false);
-                setAdminModalOpen(true);
-              }}
-              className="text-xs font-bold text-emerald-600 flex items-center space-x-1 px-2 py-1 bg-emerald-50 rounded-lg"
-            >
-              <ShieldCheck className="w-3.5 h-3.5" />
-              <span>Admin Portal</span>
-            </button>
           </div>
 
           {/* Primary Nav Links */}
@@ -628,29 +378,6 @@ export default function Navbar() {
             </nav>
           </div>
 
-          {/* More Nav Links */}
-          <div>
-            <span className="text-[10px] font-black uppercase tracking-wider text-gray-400 block mb-2 px-1">
-              Hospital Services & Resources
-            </span>
-            <nav className="grid grid-cols-2 gap-1.5">
-              {moreLinks.map((link) => (
-                <Link
-                  key={link.href}
-                  href={link.href}
-                  onClick={() => setMobileMenuOpen(false)}
-                  className={`px-3 py-2 text-xs font-semibold rounded-xl transition ${
-                    pathname === link.href
-                      ? 'bg-primary text-white font-bold'
-                      : 'text-gray-600 hover:bg-gray-100'
-                  }`}
-                >
-                  {link.name}
-                </Link>
-              ))}
-            </nav>
-          </div>
-
           {/* Action CTAs */}
           <div className="pt-2 border-t border-gray-100 space-y-2">
             <Link
@@ -661,16 +388,6 @@ export default function Navbar() {
               <Calendar className="w-4 h-4" />
               <span>{t.bookAppointment}</span>
             </Link>
-            <button
-              onClick={() => {
-                setMobileMenuOpen(false);
-                setAdminModalOpen(true);
-              }}
-              className="w-full flex items-center justify-center space-x-2 py-2.5 rounded-xl bg-[#202B33] text-white font-bold text-xs shadow-md"
-            >
-              <ShieldCheck className="w-4 h-4 text-emerald-400" />
-              <span>Enter Admin CMS (admin@medicalpress.com)</span>
-            </button>
           </div>
         </div>
       )}
