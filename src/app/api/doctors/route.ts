@@ -60,7 +60,7 @@ export async function POST(request: Request) {
       data: {
         name: body.name,
         slug: body.slug || slug,
-        photo: body.photo || 'https://images.unsplash.com/photo-1622253692010-333f2da6031d?auto=format&fit=crop&w=600&q=80',
+        photo: body.photo || '',
         specialty: body.specialty,
         departmentId: body.departmentId,
         branchId: body.branchId || null,

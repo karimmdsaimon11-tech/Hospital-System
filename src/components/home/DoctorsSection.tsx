@@ -12,7 +12,8 @@ import {
   Twitter, 
   Linkedin, 
   Instagram,
-  UserCheck
+  UserCheck,
+  User
 } from 'lucide-react';
 import { useLanguage } from '@/components/providers/LanguageContext';
 
@@ -55,6 +56,7 @@ export default function DoctorsSection({
 }) {
   const { t } = useLanguage();
   const [selectedDept, setSelectedDept] = useState<string>('all');
+  const [visibleCount, setVisibleCount] = useState<number>(8);
 
   const filteredDoctors = selectedDept === 'all'
     ? initialDoctors
@@ -67,7 +69,7 @@ export default function DoctorsSection({
         <div className="text-center max-w-3xl mx-auto mb-12">
           <div className="inline-flex items-center space-x-2 px-3.5 py-1.5 rounded-full bg-primary/10 text-primary text-xs font-bold tracking-wide uppercase mb-3">
             <UserCheck className="w-4 h-4" />
-            <span>World-Class Medical Faculty</span>
+            <span>World-Class Medical Faculty ({filteredDoctors.length} Specialists)</span>
           </div>
           <h2 className="text-3xl sm:text-4xl font-black text-dark tracking-tight">
             Meet Our Doctors
@@ -80,19 +82,25 @@ export default function DoctorsSection({
           {/* Department Filter Tabs (Section 12: Meet Our Doctors Filters) */}
           <div className="mt-8 flex flex-wrap items-center justify-center gap-2 overflow-x-auto pb-2">
             <button
-              onClick={() => setSelectedDept('all')}
+              onClick={() => {
+                setSelectedDept('all');
+                setVisibleCount(8);
+              }}
               className={`px-4 py-2 rounded-full text-xs font-bold transition-all shadow-sm ${
                 selectedDept === 'all'
                   ? 'bg-primary text-white shadow-primary/20'
                   : 'bg-white text-text-secondary hover:text-dark hover:bg-gray-100 border border-gray-200'
               }`}
             >
-              All Departments
+              All Departments ({initialDoctors.length})
             </button>
-            {departments.slice(0, 5).map((dept) => (
+            {departments.slice(0, 8).map((dept) => (
               <button
                 key={dept.id}
-                onClick={() => setSelectedDept(dept.id)}
+                onClick={() => {
+                  setSelectedDept(dept.id);
+                  setVisibleCount(8);
+                }}
                 className={`px-4 py-2 rounded-full text-xs font-bold transition-all shadow-sm ${
                   selectedDept === dept.id
                     ? 'bg-primary text-white shadow-primary/20'
@@ -107,20 +115,28 @@ export default function DoctorsSection({
 
         {/* 11. 4-Column Responsive Doctor Grid (Desktop: 4, Tablet: 2, Mobile: 1) */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-          {filteredDoctors.slice(0, 8).map((doctor) => (
+          {filteredDoctors.slice(0, visibleCount).map((doctor) => (
             <div
               key={doctor.id}
               className="bg-white rounded-xl overflow-hidden border border-gray-100 shadow-soft hover:shadow-card hover:-translate-y-1 transition-all duration-300 flex flex-col justify-between group"
             >
-              {/* Doctor Image with Subtle Hover Zoom (Section 65) */}
-              <div className="relative h-60 w-full overflow-hidden bg-gray-100">
-                <Image
-                  src={doctor.photo}
-                  alt={doctor.name}
-                  fill
-                  sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
-                  className="object-cover object-top transition-transform duration-500 group-hover:scale-105"
-                />
+              {/* Doctor Image or Empty Shape Placeholder */}
+              <div className="relative h-60 w-full overflow-hidden bg-gray-100 flex items-center justify-center">
+                {doctor.photo ? (
+                  <img
+                    src={doctor.photo}
+                    alt={doctor.name}
+                    className="w-full h-full object-cover object-top transition-transform duration-500 group-hover:scale-105"
+                  />
+                ) : (
+                  <div className="w-full h-full p-4 flex flex-col items-center justify-center bg-gradient-to-b from-gray-50 to-gray-100/80 text-center">
+                    <div className="w-16 h-16 rounded-full bg-primary/10 border border-primary/20 flex items-center justify-center text-primary mb-2 shadow-xs group-hover:scale-105 transition">
+                      <User className="w-8 h-8 text-primary/70" />
+                    </div>
+                    <span className="text-[11px] font-bold text-gray-500">Doctor Photo Slot</span>
+                    <span className="text-[9px] text-gray-400 mt-0.5">Empty shape</span>
+                  </div>
+                )}
                 <div className="absolute top-3 right-3 bg-white/95 backdrop-blur-sm px-2.5 py-1 rounded-full text-[11px] font-bold text-primary shadow-sm">
                   {doctor.department?.name || 'Specialist'}
                 </div>
@@ -193,13 +209,22 @@ export default function DoctorsSection({
           ))}
         </div>
 
-        {/* View All Doctors Link */}
-        <div className="mt-12 text-center">
+        {/* Load More & Directory Links */}
+        <div className="mt-12 flex flex-col sm:flex-row items-center justify-center gap-4">
+          {filteredDoctors.length > visibleCount && (
+            <button
+              onClick={() => setVisibleCount((prev) => prev + 8)}
+              className="px-7 py-3 rounded-xl bg-primary text-white font-bold text-xs shadow-md shadow-primary/20 hover:bg-primary-hover transition"
+            >
+              Load More Doctors ({filteredDoctors.length - visibleCount} More)
+            </button>
+          )}
+
           <Link
             href="/doctors"
-            className="inline-flex items-center space-x-2 px-6 py-3 rounded-xl bg-white border border-gray-200 text-dark font-bold text-sm shadow-sm hover:border-primary hover:text-primary transition"
+            className="inline-flex items-center space-x-2 px-6 py-3 rounded-xl bg-white border border-gray-200 text-dark font-bold text-xs sm:text-sm shadow-sm hover:border-primary hover:text-primary transition"
           >
-            <span>Explore All 100+ Specialists in Directory</span>
+            <span>Explore All ({initialDoctors.length}) Specialists in Directory</span>
             <ArrowRight className="w-4 h-4 text-primary" />
           </Link>
         </div>

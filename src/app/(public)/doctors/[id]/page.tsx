@@ -17,7 +17,8 @@ import {
   Twitter,
   Linkedin,
   Instagram,
-  UserCheck
+  UserCheck,
+  User
 } from 'lucide-react';
 
 export const revalidate = 0;
@@ -59,14 +60,20 @@ export default async function DoctorDetailPage({
           {/* Left Column: Doctor Profile Card */}
           <div className="lg:col-span-4 space-y-6">
             <div className="bg-white rounded-2xl overflow-hidden border border-gray-200 shadow-soft p-6 text-center">
-              <div className="relative w-48 h-48 mx-auto rounded-2xl overflow-hidden shadow-card mb-4 bg-gray-100">
-                <Image
-                  src={doctor.photo}
-                  alt={doctor.name}
-                  fill
-                  priority
-                  className="object-cover object-top"
-                />
+              <div className="relative w-48 h-48 mx-auto rounded-2xl overflow-hidden shadow-card mb-4 bg-gray-100 flex items-center justify-center">
+                {doctor.photo ? (
+                  <img
+                    src={doctor.photo}
+                    alt={doctor.name}
+                    className="w-full h-full object-cover object-top"
+                  />
+                ) : (
+                  <div className="w-full h-full flex flex-col items-center justify-center bg-gray-50 text-gray-400 p-4">
+                    <User className="w-16 h-16 text-primary/40 mb-1" />
+                    <span className="text-[11px] font-bold text-gray-500">Doctor Photo Slot</span>
+                    <span className="text-[9px] text-gray-400">Empty shape</span>
+                  </div>
+                )}
               </div>
 
               <h1 className="text-xl font-black text-dark tracking-tight">{doctor.name}</h1>

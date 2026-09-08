@@ -13,7 +13,8 @@ import {
   Linkedin, 
   Instagram, 
   ArrowRight,
-  Filter
+  Filter,
+  User
 } from 'lucide-react';
 
 export default function DoctorsDirectoryClient({
@@ -99,15 +100,23 @@ export default function DoctorsDirectoryClient({
               key={doctor.id}
               className="bg-white rounded-xl overflow-hidden border border-gray-100 shadow-soft hover:shadow-card hover:-translate-y-1 transition-all duration-300 flex flex-col justify-between group"
             >
-              {/* Doctor Image with Subtle Hover Zoom */}
-              <div className="relative h-60 w-full overflow-hidden bg-gray-100">
-                <Image
-                  src={doctor.photo}
-                  alt={doctor.name}
-                  fill
-                  sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
-                  className="object-cover object-top transition-transform duration-500 group-hover:scale-105"
-                />
+              {/* Doctor Image or Empty Shape Slot */}
+              <div className="relative h-60 w-full overflow-hidden bg-gray-100 flex items-center justify-center">
+                {doctor.photo ? (
+                  <img
+                    src={doctor.photo}
+                    alt={doctor.name}
+                    className="w-full h-full object-cover object-top transition-transform duration-500 group-hover:scale-105"
+                  />
+                ) : (
+                  <div className="w-full h-full p-4 flex flex-col items-center justify-center bg-gradient-to-b from-gray-50 to-gray-100/80 text-center">
+                    <div className="w-16 h-16 rounded-full bg-primary/10 border border-primary/20 flex items-center justify-center text-primary mb-2 shadow-xs group-hover:scale-105 transition">
+                      <User className="w-8 h-8 text-primary/70" />
+                    </div>
+                    <span className="text-[11px] font-bold text-gray-500">Doctor Photo Slot</span>
+                    <span className="text-[9px] text-gray-400 mt-0.5">Empty shape</span>
+                  </div>
+                )}
                 <div className="absolute top-3 right-3 bg-white/95 backdrop-blur-sm px-2.5 py-1 rounded-full text-[11px] font-bold text-primary shadow-sm">
                   {doctor.department?.name || 'Specialist'}
                 </div>
