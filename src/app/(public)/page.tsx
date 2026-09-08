@@ -12,6 +12,8 @@ import {
   HeartPulse, 
   Activity, 
   Users, 
+  User,
+  Camera,
   ArrowRight, 
   Building2, 
   FileText, 
@@ -176,33 +178,51 @@ export default async function HomePage() {
               <div className="relative mx-auto max-w-md lg:max-w-none">
                 {/* Subtle cyan glow behind doctor */}
                 <div className="absolute -inset-4 rounded-3xl bg-primary/20 filter blur-2xl opacity-70" />
-                <div className="relative rounded-2xl overflow-hidden border-2 border-white/10 shadow-2xl bg-dark-card aspect-[4/5]">
-                  <Image
-                    src="https://images.unsplash.com/photo-1622253692010-333f2da6031d?auto=format&fit=crop&w=1000&q=80"
-                    alt="Senior Doctor in Turquoise Scrubs with Stethoscope"
-                    fill
-                    priority
-                    sizes="(max-width: 1024px) 100vw, 40vw"
-                    className="object-cover object-top"
-                  />
-                  {/* Floating Doctor Profile Badge */}
-                  <div className="absolute bottom-4 left-4 right-4 p-4 rounded-xl bg-dark/80 backdrop-blur-md border border-white/15 text-white flex items-center justify-between">
-                    <div className="flex items-center space-x-3">
-                      <div className="w-10 h-10 rounded-full bg-primary flex items-center justify-center font-bold text-sm">
-                        MD
-                      </div>
-                      <div>
-                        <div className="font-extrabold text-sm">Dr. Addison Alexander</div>
-                        <div className="text-xs text-primary font-medium">Chief Interventional Cardiologist</div>
+                <div className="relative rounded-2xl overflow-hidden border-2 border-white/10 shadow-2xl bg-dark-card aspect-[4/5] flex items-center justify-center">
+                  {globalInfo.heroDoctorImage ? (
+                    <>
+                      <Image
+                        src={globalInfo.heroDoctorImage}
+                        alt={globalInfo.heroDoctorName || "Doctor Profile"}
+                        fill
+                        priority
+                        sizes="(max-width: 1024px) 100vw, 40vw"
+                        className="object-cover object-top"
+                      />
+                      {globalInfo.heroDoctorName && (
+                        <div className="absolute bottom-4 left-4 right-4 p-4 rounded-xl bg-dark/80 backdrop-blur-md border border-white/15 text-white flex items-center justify-between">
+                          <div className="flex items-center space-x-3">
+                            <div className="w-10 h-10 rounded-full bg-primary flex items-center justify-center font-bold text-sm">
+                              {globalInfo.heroDoctorName.replace(/^(Dr\.\s*|Dr\s*)/i, '').split(' ').map((n: string) => n[0]).join('').slice(0, 2) || 'MD'}
+                            </div>
+                            <div>
+                              <div className="font-extrabold text-sm">{globalInfo.heroDoctorName}</div>
+                              <div className="text-xs text-primary font-medium">{globalInfo.heroDoctorTitle || 'Specialist Consultant'}</div>
+                            </div>
+                          </div>
+                          <Link
+                            href="/appointment"
+                            className="text-xs bg-primary hover:bg-primary-hover px-3 py-1.5 rounded-lg font-bold"
+                          >
+                            Consult
+                          </Link>
+                        </div>
+                      )}
+                    </>
+                  ) : (
+                    /* Empty Doctor Photo Shape / Placeholder */
+                    <div className="w-full h-full p-5 flex flex-col items-center justify-center bg-gradient-to-b from-[#1b2b35]/70 to-[#0e1e28]/90">
+                      <div className="w-full h-full border-2 border-dashed border-white/20 rounded-xl flex flex-col items-center justify-center p-6 text-center transition hover:border-primary/50">
+                        <div className="w-20 h-20 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center text-primary/70 mb-4 shadow-inner">
+                          <User className="w-10 h-10 text-primary/60" />
+                        </div>
+                        <h3 className="text-base font-bold text-white/90">Doctor Photo Slot</h3>
+                        <p className="text-xs text-gray-400 mt-1.5 max-w-[210px] leading-relaxed">
+                          Shape is kept empty. Add your doctor picture anytime from Admin Panel.
+                        </p>
                       </div>
                     </div>
-                    <Link
-                      href="/appointment?doctorId=cmd8alexander"
-                      className="text-xs bg-primary hover:bg-primary-hover px-3 py-1.5 rounded-lg font-bold"
-                    >
-                      Consult
-                    </Link>
-                  </div>
+                  )}
                 </div>
               </div>
             </div>

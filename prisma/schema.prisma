@@ -56,6 +56,9 @@ model GlobalSetting {
   announcementText      String   @default("Welcome to MedicalPress — Advanced Healthcare & Compassionate Care")
   emergencyBannerActive Boolean  @default(true)
   emergencyBannerText   String   @default("24/7 Level 1 Trauma & Emergency Care Available. Call hotline directly.")
+  heroDoctorImage       String?  @default("")
+  heroDoctorName        String?  @default("")
+  heroDoctorTitle       String?  @default("")
   updatedAt             DateTime @updatedAt
 }
 

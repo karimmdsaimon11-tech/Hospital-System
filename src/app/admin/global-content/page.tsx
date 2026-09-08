@@ -11,13 +11,18 @@ import {
   Clock, 
   MapPin, 
   Building2,
-  Sliders
+  Sliders,
+  User,
+  Image as ImageIcon,
+  Trash2,
+  Sparkles
 } from 'lucide-react';
 
 export default function AdminGlobalContentPage() {
   const router = useRouter();
+  const [doctorList, setDoctorList] = useState<any[]>([]);
   const [formData, setFormData] = useState({
-    hospitalName: 'MedicalPress Hospital',
+    hospitalName: 'Green Shifa Hospital',
     tagline: 'Advanced Healthcare & Compassionate Care',
     phone: '+1-800-654-3210',
     emergencyPhone: '+1-800-999-HELP',
@@ -25,16 +30,19 @@ export default function AdminGlobalContentPage() {
     email: 'care@medicalpress.com',
     address: '742 Evergreen Medical Parkway, Healthcare District, NY 10001',
     openingHours: 'Monday to Saturday — 8:00 AM to 9:00 PM',
-    announcementText: 'Welcome to MedicalPress — Advanced Healthcare & Compassionate Care',
+    announcementText: 'Welcome to Green Shifa Hospital — Advanced Healthcare & Compassionate Care',
     announcementActive: true,
     emergencyBannerText: '24/7 Level 1 Trauma & Emergency Care Available. Call hotline directly.',
     emergencyBannerActive: true,
-    copyright: '© 2026 MedicalPress International Hospital. All rights reserved.',
+    copyright: '© 2026 Green Shifa Hospital. All rights reserved.',
     facebook: 'https://facebook.com/medicalpress',
     twitter: 'https://twitter.com/medicalpress',
     instagram: 'https://instagram.com/medicalpress',
     linkedin: 'https://linkedin.com/company/medicalpress',
     youtube: 'https://youtube.com/medicalpress',
+    heroDoctorImage: '',
+    heroDoctorName: '',
+    heroDoctorTitle: '',
   });
 
   const [saving, setSaving] = useState(false);
@@ -48,8 +56,18 @@ export default function AdminGlobalContentPage() {
           setFormData((prev) => ({
             ...prev,
             ...data,
+            heroDoctorImage: data.heroDoctorImage || '',
+            heroDoctorName: data.heroDoctorName || '',
+            heroDoctorTitle: data.heroDoctorTitle || '',
           }));
         }
+      })
+      .catch(() => {});
+
+    fetch('/api/doctors', { cache: 'no-store' })
+      .then((res) => res.json())
+      .then((docs) => {
+        if (Array.isArray(docs)) setDoctorList(docs);
       })
       .catch(() => {});
   };
@@ -140,11 +158,151 @@ export default function AdminGlobalContentPage() {
           </div>
         </div>
 
+        {/* 2. Homepage Hero Doctor Photo & Showcase */}
+        <div className="bg-white p-6 sm:p-8 rounded-2xl border border-gray-200 shadow-soft space-y-5">
+          <div className="border-b pb-3 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+            <div>
+              <h2 className="text-base font-black text-dark flex items-center space-x-2">
+                <User className="w-4 h-4 text-primary" />
+                <span>2. Homepage Hero Doctor Photo & Showcase (Right Frame)</span>
+              </h2>
+              <p className="text-xs text-text-secondary mt-0.5">
+                Add your doctor photo here anytime. If left empty, the frame on the homepage will stay as an empty shape slot.
+              </p>
+            </div>
+            {formData.heroDoctorImage && (
+              <button
+                type="button"
+                onClick={() => setFormData({ ...formData, heroDoctorImage: '', heroDoctorName: '', heroDoctorTitle: '' })}
+                className="inline-flex items-center space-x-1.5 px-3 py-1 rounded-lg bg-rose-50 text-rose-600 hover:bg-rose-100 text-xs font-bold transition border border-rose-200"
+              >
+                <Trash2 className="w-3.5 h-3.5" />
+                <span>Keep Shape Empty</span>
+              </button>
+            )}
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-12 gap-6 items-start">
+            {/* Form Fields */}
+            <div className="md:col-span-8 space-y-4">
+              {/* Quick Select from existing Doctors */}
+              {doctorList.length > 0 && (
+                <div>
+                  <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1.5 flex items-center space-x-1.5">
+                    <Sparkles className="w-3.5 h-3.5 text-primary" />
+                    <span>Quick Select From Hospital Doctors</span>
+                  </label>
+                  <select
+                    onChange={(e) => {
+                      const selected = doctorList.find((d) => d.id === e.target.value);
+                      if (selected) {
+                        setFormData({
+                          ...formData,
+                          heroDoctorImage: selected.photo || '',
+                          heroDoctorName: selected.name || '',
+                          heroDoctorTitle: selected.specialty || '',
+                        });
+                      }
+                    }}
+                    defaultValue=""
+                    className="w-full px-3.5 py-2.5 rounded-lg border border-gray-300 text-dark text-sm bg-white"
+                  >
+                    <option value="" disabled>-- Pick a doctor to auto-fill --</option>
+                    {doctorList.map((doc) => (
+                      <option key={doc.id} value={doc.id}>
+                        {doc.name} ({doc.specialty})
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              )}
+
+              <div>
+                <label className="block font-bold text-dark text-sm mb-1">
+                  Doctor Photo URL
+                </label>
+                <div className="relative">
+                  <input
+                    type="url"
+                    placeholder="https://images.unsplash.com/... or paste your image URL"
+                    value={formData.heroDoctorImage}
+                    onChange={(e) => setFormData({ ...formData, heroDoctorImage: e.target.value })}
+                    className="w-full px-3.5 py-2.5 rounded-lg border border-gray-300 text-dark text-sm"
+                  />
+                </div>
+                <p className="text-[11px] text-gray-400 mt-1">
+                  Leave this input empty if you want the shape on the homepage to remain completely empty.
+                </p>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label className="block font-bold text-dark text-sm mb-1">
+                    Doctor Name (Optional)
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="e.g. Dr. Addison Alexander"
+                    value={formData.heroDoctorName}
+                    onChange={(e) => setFormData({ ...formData, heroDoctorName: e.target.value })}
+                    className="w-full px-3.5 py-2.5 rounded-lg border border-gray-300 text-dark text-sm"
+                  />
+                </div>
+                <div>
+                  <label className="block font-bold text-dark text-sm mb-1">
+                    Doctor Specialty / Title (Optional)
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="e.g. Chief Interventional Cardiologist"
+                    value={formData.heroDoctorTitle}
+                    onChange={(e) => setFormData({ ...formData, heroDoctorTitle: e.target.value })}
+                    className="w-full px-3.5 py-2.5 rounded-lg border border-gray-300 text-dark text-sm"
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* Live Preview Card */}
+            <div className="md:col-span-4 flex flex-col items-center">
+              <span className="text-[11px] font-bold text-gray-400 uppercase tracking-wider mb-2">
+                Homepage Live Preview
+              </span>
+              <div className="w-48 aspect-[4/5] rounded-2xl overflow-hidden border-2 border-gray-800 bg-[#1b2b35] relative shadow-lg flex items-center justify-center">
+                {formData.heroDoctorImage ? (
+                  <>
+                    <img
+                      src={formData.heroDoctorImage}
+                      alt="Doctor Preview"
+                      className="w-full h-full object-cover object-top"
+                      onError={(e) => {
+                        (e.target as HTMLElement).style.display = 'none';
+                      }}
+                    />
+                    {formData.heroDoctorName && (
+                      <div className="absolute bottom-2 left-2 right-2 p-2 rounded-lg bg-black/75 backdrop-blur-sm text-white text-[10px]">
+                        <div className="font-bold truncate">{formData.heroDoctorName}</div>
+                        <div className="text-[9px] text-primary truncate">{formData.heroDoctorTitle || 'Consultant'}</div>
+                      </div>
+                    )}
+                  </>
+                ) : (
+                  <div className="w-[calc(100%-16px)] h-[calc(100%-16px)] border-2 border-dashed border-white/20 rounded-xl flex flex-col items-center justify-center p-3 text-center">
+                    <User className="w-8 h-8 text-primary/60 mb-2" />
+                    <span className="text-[11px] font-bold text-white/80 leading-tight">Empty Shape</span>
+                    <span className="text-[9px] text-gray-400 mt-1 leading-tight">Awaiting photo</span>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+
         {/* Contact Numbers & Operating Hours */}
         <div className="bg-white p-6 sm:p-8 rounded-2xl border border-gray-200 shadow-soft space-y-4">
           <h2 className="text-base font-black text-dark border-b pb-2 flex items-center space-x-2">
             <Phone className="w-4 h-4 text-primary" />
-            <span>2. Global Hospital Phone Numbers & Operating Hours</span>
+            <span>3. Global Hospital Phone Numbers & Operating Hours</span>
           </h2>
 
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
@@ -217,7 +375,7 @@ export default function AdminGlobalContentPage() {
         <div className="bg-white p-6 sm:p-8 rounded-2xl border border-gray-200 shadow-soft space-y-4">
           <h2 className="text-base font-black text-dark border-b pb-2 flex items-center space-x-2">
             <Globe className="w-4 h-4 text-primary" />
-            <span>3. Top Announcement Bar & Emergency Notice</span>
+            <span>4. Top Announcement Bar & Emergency Notice</span>
           </h2>
 
           <div className="space-y-3">
@@ -261,7 +419,7 @@ export default function AdminGlobalContentPage() {
         <div className="bg-white p-6 sm:p-8 rounded-2xl border border-gray-200 shadow-soft space-y-4">
           <h2 className="text-base font-black text-dark border-b pb-2 flex items-center space-x-2">
             <Sliders className="w-4 h-4 text-primary" />
-            <span>4. Footer & Social Channels</span>
+            <span>5. Footer & Social Channels</span>
           </h2>
 
           <div>

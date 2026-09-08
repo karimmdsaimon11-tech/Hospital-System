@@ -55,6 +55,9 @@ export async function POST(request: Request) {
         instagram: data.instagram,
         linkedin: data.linkedin,
         youtube: data.youtube,
+        heroDoctorImage: data.heroDoctorImage !== undefined ? data.heroDoctorImage : '',
+        heroDoctorName: data.heroDoctorName !== undefined ? data.heroDoctorName : '',
+        heroDoctorTitle: data.heroDoctorTitle !== undefined ? data.heroDoctorTitle : '',
       },
       create: {
         id: 'default',
