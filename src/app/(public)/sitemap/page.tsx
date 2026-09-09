@@ -20,9 +20,6 @@ export default function SitemapPage() {
     { title: 'Frequently Asked Questions (FAQ)', href: '/faq' },
     { title: 'Hospital Careers & Medical Vacancies', href: '/careers' },
     { title: 'Contact Hospital & Google Maps', href: '/contact' },
-    { title: 'UI Component Showcase (Section 66)', href: '/component-showcase' },
-    { title: 'Blog Editorial Component (Section 67)', href: '/blog-component' },
-    { title: 'Hospital Management Admin CMS', href: '/admin/login' },
   ];
 
   return (

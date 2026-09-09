@@ -44,14 +44,55 @@ export default function AdminLayout({
   const router = useRouter();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [user, setUser] = useState({
-    name: 'Dr. Arthur Sterling',
+    name: 'Hospital Administrator',
     role: 'Super Admin',
-    email: 'admin@medicalpress.com',
+    email: 'Admin@776753',
   });
+  const [authChecking, setAuthChecking] = useState(pathname !== '/admin/login');
+
+  useEffect(() => {
+    if (pathname === '/admin/login') {
+      setAuthChecking(false);
+      return;
+    }
+
+    const hasSession = document.cookie.includes('medicalpress_session=');
+    if (!hasSession) {
+      router.push('/admin/login');
+      return;
+    }
+
+    try {
+      const match = document.cookie.match(/medicalpress_session=([^;]+)/);
+      if (match && match[1]) {
+        const decoded = JSON.parse(decodeURIComponent(match[1]));
+        if (decoded) {
+          setUser({
+            name: decoded.name || 'Hospital Administrator',
+            role: decoded.role || 'Super Admin',
+            email: decoded.email || 'Admin@776753',
+          });
+        }
+      }
+    } catch (e) {}
+
+    setAuthChecking(false);
+  }, [pathname, router]);
 
   // If on login page, render children without sidebar
   if (pathname === '/admin/login') {
     return <>{children}</>;
+  }
+
+  if (authChecking) {
+    return (
+      <div className="min-h-screen bg-[#131b20] flex items-center justify-center p-4">
+        <div className="flex flex-col items-center space-y-3 text-white">
+          <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+          <span className="text-xs text-gray-400 font-bold">Verifying authorization...</span>
+        </div>
+      </div>
+    );
   }
 
   const handleLogout = async () => {
@@ -161,11 +202,11 @@ export default function AdminLayout({
         <div className="p-4 border-t border-[#2E3C47] flex items-center justify-between">
           <div className="flex items-center space-x-2.5 min-w-0">
             <div className="w-9 h-9 rounded-full bg-primary/20 border border-primary text-primary font-bold flex items-center justify-center text-xs shrink-0">
-              AS
+              AD
             </div>
             <div className="min-w-0">
               <div className="text-xs font-bold text-white truncate">{user.name}</div>
-              <div className="text-[10px] text-gray-400 truncate">{user.role}</div>
+              <div className="text-[10px] text-gray-400 truncate">{user.email}</div>
             </div>
           </div>
           <button
@@ -267,11 +308,11 @@ export default function AdminLayout({
             {/* User Profile Badge */}
             <div className="flex items-center space-x-2 pl-2 border-l border-gray-200">
               <div className="w-8 h-8 rounded-full bg-primary/15 text-primary font-bold flex items-center justify-center text-xs">
-                AS
+                AD
               </div>
               <div className="hidden md:block text-left">
                 <div className="text-xs font-bold text-dark leading-tight">{user.name}</div>
-                <div className="text-[10px] text-primary font-semibold leading-tight">{user.role}</div>
+                <div className="text-[10px] text-primary font-semibold leading-tight">{user.email}</div>
               </div>
             </div>
           </div>

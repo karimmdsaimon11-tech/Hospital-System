@@ -283,12 +283,6 @@ export default function Footer() {
             <Link href="/privacy" className="hover:text-gray-200 transition">Privacy Policy</Link>
             <Link href="/terms" className="hover:text-gray-200 transition">Terms & Conditions</Link>
             <Link href="/sitemap" className="hover:text-gray-200 transition">Sitemap</Link>
-            <Link href="/component-showcase" className="text-primary hover:underline">UI Showcase</Link>
-            <Link href="/blog-component" className="text-primary hover:underline">Blog Layout</Link>
-            <Link href="/admin/login" className="flex items-center space-x-1 text-gray-400 hover:text-white transition bg-gray-800/80 px-2.5 py-1 rounded">
-              <ShieldCheck className="w-3.5 h-3.5 text-primary" />
-              <span>Staff Login</span>
-            </Link>
           </div>
         </div>
       </div>

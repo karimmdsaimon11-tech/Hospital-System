@@ -3,11 +3,11 @@
 import React, { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { ShieldCheck, Lock, Mail, AlertCircle, ArrowRight, Eye, EyeOff } from 'lucide-react';
+import { ShieldCheck, Lock, User, AlertCircle, ArrowRight, Eye, EyeOff, Loader2 } from 'lucide-react';
 
 export default function AdminLoginPage() {
   const router = useRouter();
-  const [email, setEmail] = useState('');
+  const [userId, setUserId] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -22,7 +22,7 @@ export default function AdminLoginPage() {
       const res = await fetch('/api/auth/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password }),
+        body: JSON.stringify({ userId: userId.trim(), password: password.trim() }),
       });
 
       const data = await res.json();
@@ -30,6 +30,7 @@ export default function AdminLoginPage() {
 
       // Redirect to admin dashboard
       router.push('/admin');
+      router.refresh();
     } catch (err: any) {
       setError(err.message || 'Access Denied: Invalid User ID or Password.');
     } finally {
@@ -38,18 +39,18 @@ export default function AdminLoginPage() {
   };
 
   return (
-    <div className="min-h-screen bg-[#192228] flex items-center justify-center p-4">
-      <div className="max-w-md w-full bg-[#202B33] border border-[#2E3C47] rounded-3xl p-8 shadow-2xl space-y-6 text-white animate-fadeIn">
+    <div className="min-h-screen bg-[#131b20] flex items-center justify-center p-4">
+      <div className="max-w-md w-full bg-[#1c272e] border border-[#2a3a45] rounded-3xl p-8 shadow-2xl space-y-6 text-white animate-fadeIn">
         {/* Header */}
         <div className="text-center space-y-2">
           <div className="w-14 h-14 rounded-2xl bg-primary text-white flex items-center justify-center mx-auto shadow-lg shadow-primary/20">
             <ShieldCheck className="w-8 h-8" />
           </div>
           <h1 className="text-2xl font-black tracking-tight text-white">
-            MedicalPRESS <span className="text-primary font-bold">Admin CMS</span>
+            Hospital Admin <span className="text-primary font-bold">Portal</span>
           </h1>
           <p className="text-xs text-gray-400">
-            Hospital Management & Executive Operations Console
+            Authorized Executive Management & Clinical Operations Console
           </p>
         </div>
 
@@ -63,22 +64,23 @@ export default function AdminLoginPage() {
         {/* Secure Login Form */}
         <form onSubmit={handleLogin} className="space-y-4 text-xs">
           <div>
-            <label className="block font-bold text-gray-300 mb-1.5">Management User ID / Email</label>
+            <label className="block font-bold text-gray-300 mb-1.5">User ID</label>
             <div className="relative">
-              <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+              <User className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
               <input
-                type="email"
+                type="text"
                 required
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder="Enter authorized user ID / email..."
-                className="w-full pl-10 pr-4 py-3 rounded-xl bg-[#192228] border border-[#2E3C47] text-white placeholder-gray-500 focus:outline-none focus:border-primary text-xs sm:text-sm"
+                value={userId}
+                onChange={(e) => setUserId(e.target.value)}
+                placeholder="Enter User ID..."
+                autoComplete="username"
+                className="w-full pl-10 pr-4 py-3 rounded-xl bg-[#131b20] border border-[#2a3a45] text-white placeholder-gray-500 focus:outline-none focus:border-primary text-xs sm:text-sm"
               />
             </div>
           </div>
 
           <div>
-            <label className="block font-bold text-gray-300 mb-1.5">Security Password</label>
+            <label className="block font-bold text-gray-300 mb-1.5">Password</label>
             <div className="relative">
               <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
               <input
@@ -86,8 +88,9 @@ export default function AdminLoginPage() {
                 required
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                placeholder="Enter security password..."
-                className="w-full pl-10 pr-10 py-3 rounded-xl bg-[#192228] border border-[#2E3C47] text-white placeholder-gray-500 focus:outline-none focus:border-primary text-xs sm:text-sm font-mono"
+                placeholder="••••••••••••"
+                autoComplete="current-password"
+                className="w-full pl-10 pr-10 py-3 rounded-xl bg-[#131b20] border border-[#2a3a45] text-white placeholder-gray-500 focus:outline-none focus:border-primary text-xs sm:text-sm font-mono"
               />
               <button
                 type="button"
@@ -105,15 +108,24 @@ export default function AdminLoginPage() {
             disabled={loading}
             className="w-full py-3.5 rounded-xl bg-primary hover:bg-primary-hover text-white font-extrabold text-xs sm:text-sm shadow-lg shadow-primary/20 transition flex items-center justify-center space-x-2 disabled:opacity-50 mt-2"
           >
-            <span>{loading ? 'Verifying Authorization...' : '🔒 Authenticate & Access Admin Panel'}</span>
-            <ArrowRight className="w-4 h-4" />
+            {loading ? (
+              <>
+                <Loader2 className="w-4 h-4 animate-spin" />
+                <span>Verifying Authorization...</span>
+              </>
+            ) : (
+              <>
+                <span>Sign In to Admin Panel</span>
+                <ArrowRight className="w-4 h-4" />
+              </>
+            )}
           </button>
         </form>
 
-        <div className="pt-4 border-t border-[#2E3C47] flex items-center justify-between text-xs text-gray-400">
-          <span>Protected by Enterprise RBAC Security</span>
+        <div className="pt-4 border-t border-[#2a3a45] flex items-center justify-between text-xs text-gray-400">
+          <span>Enterprise Security Protected</span>
           <Link href="/" className="text-xs text-primary hover:underline font-semibold">
-            ← Return to Public Website
+            ← Return to Website
           </Link>
         </div>
       </div>
