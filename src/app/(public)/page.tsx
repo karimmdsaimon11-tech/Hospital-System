@@ -25,6 +25,7 @@ import {
   Mail
 } from 'lucide-react';
 import DoctorsSection from '@/components/home/DoctorsSection';
+import DepartmentsSection from '@/components/home/DepartmentsSection';
 import TestimonialsSection from '@/components/home/TestimonialsSection';
 import NewsletterForm from '@/components/home/NewsletterForm';
 
@@ -291,70 +292,7 @@ export default async function HomePage() {
       </section>
 
       {/* 10. FEATURED DEPARTMENTS (Section 10) */}
-      <section className="py-20 bg-white border-t border-gray-100" id="departments">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex flex-col sm:flex-row sm:items-end justify-between mb-12">
-            <div>
-              <div className="inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-primary/10 text-primary text-xs font-bold uppercase tracking-wider mb-2">
-                <HeartPulse className="w-3.5 h-3.5" />
-                <span>Specialized Medical Centers</span>
-              </div>
-              <h2 className="text-3xl sm:text-4xl font-black text-dark tracking-tight">
-                Featured Departments
-              </h2>
-            </div>
-            <Link
-              href="/departments"
-              className="mt-4 sm:mt-0 inline-flex items-center space-x-2 text-sm font-bold text-primary hover:underline"
-            >
-              <span>View All 50+ Departments</span>
-              <ArrowRight className="w-4 h-4" />
-            </Link>
-          </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-            {departments.slice(0, 8).map((dept) => (
-              <div
-                key={dept.id}
-                className="bg-background rounded-xl overflow-hidden border border-medical-border/60 shadow-soft hover:shadow-card hover:-translate-y-1 transition-all duration-300 flex flex-col justify-between group"
-              >
-                <div className="relative h-44 w-full overflow-hidden bg-gray-100">
-                  <Image
-                    src={dept.image}
-                    alt={dept.name}
-                    fill
-                    sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
-                    className="object-cover transition-transform duration-500 group-hover:scale-105"
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-dark/70 via-transparent to-transparent" />
-                  <h3 className="absolute bottom-3 left-4 right-4 text-white font-extrabold text-base line-clamp-1">
-                    {dept.name}
-                  </h3>
-                </div>
-
-                <div className="p-5 flex-1 flex flex-col justify-between">
-                  <p className="text-xs text-text-secondary line-clamp-3 mb-4 leading-relaxed">
-                    {dept.shortDesc}
-                  </p>
-
-                  <div className="pt-3 border-t border-gray-200/60 flex items-center justify-between">
-                    <span className="text-[11px] font-bold text-gray-400 truncate max-w-[140px]">
-                      {dept.headOfDepartment}
-                    </span>
-                    <Link
-                      href={`/departments/${dept.slug}`}
-                      className="text-xs font-bold text-primary group-hover:translate-x-1 transition-transform flex items-center space-x-1"
-                    >
-                      <span>Explore</span>
-                      <ArrowRight className="w-3 h-3" />
-                    </Link>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
+      <DepartmentsSection departments={departments} />
 
       {/* 11 & 12. MEET OUR DOCTORS (Section 11 & 12) */}
       <DoctorsSection initialDoctors={doctors} departments={departments} />

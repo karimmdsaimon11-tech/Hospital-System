@@ -3,7 +3,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { notFound } from 'next/navigation';
 import { prisma } from '@/lib/db';
-import { ChevronRight, Calendar, ArrowRight, Activity, CheckCircle2 } from 'lucide-react';
+import { ChevronRight, Calendar, ArrowRight, Activity, CheckCircle2, User } from 'lucide-react';
 
 export const revalidate = 0;
 
@@ -91,8 +91,12 @@ export default async function ServiceDetailPage({
               <div className="space-y-3">
                 {service.department.doctors.slice(0, 3).map((doc) => (
                   <div key={doc.id} className="flex items-center space-x-3 p-2 rounded-xl hover:bg-gray-50 transition">
-                    <div className="relative w-12 h-12 rounded-full overflow-hidden shrink-0">
-                      <Image src={doc.photo} alt={doc.name} fill className="object-cover" />
+                    <div className="relative w-12 h-12 rounded-full overflow-hidden shrink-0 bg-teal-50 border border-teal-100 flex items-center justify-center">
+                      {doc.photo ? (
+                        <img src={doc.photo} alt={doc.name} className="w-full h-full object-cover" />
+                      ) : (
+                        <User className="w-6 h-6 text-teal-600/50" />
+                      )}
                     </div>
                     <div className="flex-1 min-w-0">
                       <h4 className="text-xs font-bold text-dark truncate">{doc.name}</h4>

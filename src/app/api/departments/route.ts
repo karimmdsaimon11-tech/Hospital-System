@@ -28,14 +28,17 @@ export async function GET() {
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-    const slug = body.name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)+/g, '');
+    const slug = (body.slug || body.name || `dept-${Date.now()}`)
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/(^-|-$)+/g, '');
     
     const department = await prisma.department.create({
       data: {
         name: body.name,
-        slug: body.slug || slug,
+        slug: slug,
         icon: body.icon || 'Stethoscope',
-        image: body.image || 'https://images.unsplash.com/photo-1516549655169-df83a0774514?auto=format&fit=crop&w=800&q=80',
+        image: body.image || '',
         shortDesc: body.shortDesc || '',
         description: body.description || '',
         headOfDepartment: body.headOfDepartment || 'Consultant Specialist',
@@ -95,7 +98,23 @@ export async function DELETE(request: Request) {
     const id = searchParams.get('id');
     if (!id) return NextResponse.json({ error: 'Department ID required' }, { status: 400, headers: noCacheHeaders });
 
-    await prisma.department.delete({ where: { id } });
+    // Safely delete associated records first if any, then the department
+    await prisma.$transaction(async (tx) => {
+      await tx.service.deleteMany({ where: { departmentId: id } });
+      await tx.appointment.deleteMany({ where: { departmentId: id } });
+      await tx.doctor.deleteMany({ where: { departmentId: id } });
+      await tx.department.delete({ where: { id } });
+    });
+
+    await prisma.auditLog.create({
+      data: {
+        userName: 'Admin',
+        action: 'Deleted Department',
+        module: 'Departments',
+        recordId: id,
+        details: `Deleted department ID: ${id}`,
+      },
+    }).catch(() => {});
 
     try {
       revalidatePath('/departments');
@@ -108,4 +127,5 @@ export async function DELETE(request: Request) {
     return NextResponse.json({ error: error.message || 'Failed to delete department' }, { status: 400, headers: noCacheHeaders });
   }
 }
+
 
