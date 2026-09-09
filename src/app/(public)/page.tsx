@@ -26,6 +26,7 @@ import {
 } from 'lucide-react';
 import DoctorsSection from '@/components/home/DoctorsSection';
 import DepartmentsSection from '@/components/home/DepartmentsSection';
+import ServicesSection from '@/components/home/ServicesSection';
 import TestimonialsSection from '@/components/home/TestimonialsSection';
 import NewsletterForm from '@/components/home/NewsletterForm';
 
@@ -54,7 +55,7 @@ export default async function HomePage() {
       prisma.service.findMany({
         where: { status: 'Published' },
         include: { department: true },
-        take: 6,
+        orderBy: { name: 'asc' },
       }),
       prisma.healthPackage.findMany({
         where: { status: 'Active' },
@@ -297,88 +298,8 @@ export default async function HomePage() {
       {/* 11 & 12. MEET OUR DOCTORS (Section 11 & 12) */}
       <DoctorsSection initialDoctors={doctors} departments={departments} />
 
-      {/* 13. HOSPITAL SERVICES SECTION (Section 13 & 68: 3-column responsive) */}
-      <section className="py-20 bg-white border-t border-gray-100" id="services">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center max-w-3xl mx-auto mb-12">
-            <div className="inline-flex items-center space-x-2 px-3.5 py-1.5 rounded-full bg-primary/10 text-primary text-xs font-bold uppercase tracking-wider mb-3">
-              <Activity className="w-4 h-4" />
-              <span>Comprehensive Healthcare</span>
-            </div>
-            <h2 className="text-3xl sm:text-4xl font-black text-dark tracking-tight">
-              Our Advanced Services
-            </h2>
-            <p className="mt-3 text-sm sm:text-base text-text-secondary">
-              From automated robotics diagnostics and 24/7 blood transfusion banking to dental oral surgery, 
-              we cover every clinical need with precision.
-            </p>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {services.map((srv) => (
-              <div
-                key={srv.id}
-                className="bg-background rounded-xl overflow-hidden border border-medical-border shadow-soft hover:shadow-card transition-all duration-300 flex flex-col justify-between group"
-              >
-                <div className="relative h-48 w-full overflow-hidden bg-gray-100">
-                  <Image
-                    src={srv.image}
-                    alt={srv.name}
-                    fill
-                    sizes="(max-width: 768px) 100vw, 33vw"
-                    className="object-cover transition-transform duration-500 group-hover:scale-105"
-                  />
-                  {srv.price > 0 && (
-                    <div className="absolute top-3 right-3 bg-dark/85 backdrop-blur-md px-2.5 py-1 rounded-md text-xs font-bold text-white shadow">
-                      From ${srv.price}
-                    </div>
-                  )}
-                </div>
-
-                <div className="p-6 flex-1 flex flex-col justify-between">
-                  <div>
-                    <span className="text-[11px] font-bold text-primary uppercase tracking-wide">
-                      {srv.department?.name || 'Hospital Service'}
-                    </span>
-                    <h3 className="text-lg font-extrabold text-dark mt-1 group-hover:text-primary transition line-clamp-1">
-                      {srv.name}
-                    </h3>
-                    <p className="mt-2 text-xs sm:text-sm text-text-secondary leading-relaxed line-clamp-3">
-                      {srv.shortDesc}
-                    </p>
-                  </div>
-
-                  <div className="mt-6 pt-4 border-t border-medical-border/60 flex items-center justify-between">
-                    <Link
-                      href={`/services/${srv.slug}`}
-                      className="text-xs font-bold text-dark hover:text-primary transition flex items-center space-x-1"
-                    >
-                      <span>Read More</span>
-                      <ArrowRight className="w-3.5 h-3.5 text-primary" />
-                    </Link>
-                    <Link
-                      href="/appointment"
-                      className="px-3 py-1.5 rounded-lg bg-primary text-white text-xs font-bold hover:bg-primary-hover transition"
-                    >
-                      Book Care
-                    </Link>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-
-          <div className="mt-12 text-center">
-            <Link
-              href="/services"
-              className="inline-flex items-center space-x-2 px-6 py-3 rounded-xl bg-dark text-white font-bold text-sm shadow hover:bg-primary transition"
-            >
-              <span>Explore All Hospital Services & Labs</span>
-              <ArrowRight className="w-4 h-4" />
-            </Link>
-          </div>
-        </div>
-      </section>
+      {/* 13. HOSPITAL SERVICES SECTION (Section 13 & 68: interactive with empty photo shapes & 100+ services) */}
+      <ServicesSection services={services} departments={departments} />
 
       {/* 14. WHY CHOOSE US (Section 14) */}
       <section className="py-20 bg-background border-t border-gray-100">

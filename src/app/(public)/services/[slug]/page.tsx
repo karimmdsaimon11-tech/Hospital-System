@@ -39,14 +39,21 @@ export default async function ServiceDetailPage({
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
           <div className="lg:col-span-8 space-y-6">
             <div className="bg-white rounded-2xl overflow-hidden border border-gray-200 shadow-soft">
-              <div className="relative h-80 sm:h-96 w-full bg-gray-100">
-                <Image
-                  src={service.image}
-                  alt={service.name}
-                  fill
-                  priority
-                  className="object-cover"
-                />
+              <div className="relative h-80 sm:h-96 w-full bg-gradient-to-br from-teal-50 via-emerald-50 to-cyan-50 flex items-center justify-center overflow-hidden">
+                {service.image ? (
+                  <img
+                    src={service.image}
+                    alt={service.name}
+                    className="w-full h-full object-cover"
+                  />
+                ) : (
+                  <div className="flex flex-col items-center justify-center text-teal-600/60 p-8 text-center">
+                    <Activity className="w-20 h-20 mb-3 text-teal-600/40" />
+                    <span className="text-xs font-bold text-teal-700 uppercase tracking-widest bg-teal-100/60 px-3 py-1 rounded-full">
+                      Advanced Clinical Service
+                    </span>
+                  </div>
+                )}
               </div>
 
               <div className="p-6 sm:p-10 space-y-6">

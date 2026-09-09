@@ -34,14 +34,18 @@ export async function GET(request: Request) {
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-    const slug = body.name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)+/g, '');
+    const baseSlug = (body.name || 'service')
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/(^-|-$)+/g, '');
+    const slug = body.slug || `${baseSlug}-${Date.now()}`;
 
     const service = await prisma.service.create({
       data: {
         name: body.name,
-        slug: body.slug || slug,
+        slug: slug,
         icon: body.icon || 'Activity',
-        image: body.image || 'https://images.unsplash.com/photo-1516549655169-df83a0774514?auto=format&fit=crop&w=800&q=80',
+        image: body.image || '',
         shortDesc: body.shortDesc || '',
         description: body.description || '',
         price: parseFloat(body.price) || 0,
@@ -49,7 +53,18 @@ export async function POST(request: Request) {
         featured: Boolean(body.featured),
         status: body.status || 'Published',
       },
+      include: { department: true },
     });
+
+    await prisma.auditLog.create({
+      data: {
+        userName: 'Admin',
+        action: 'Created Service',
+        module: 'Services',
+        recordId: service.id,
+        details: `Created service: ${service.name}`,
+      },
+    }).catch(() => {});
 
     try {
       revalidatePath('/services');
@@ -67,11 +82,12 @@ export async function PUT(request: Request) {
   try {
     const body = await request.json();
     const { id, department, ...data } = body;
-    if (data.price) data.price = parseFloat(data.price);
+    if (data.price !== undefined) data.price = parseFloat(data.price);
 
     const service = await prisma.service.update({
       where: { id },
       data,
+      include: { department: true },
     });
 
     try {
@@ -94,6 +110,16 @@ export async function DELETE(request: Request) {
     if (!id) return NextResponse.json({ error: 'Service ID required' }, { status: 400, headers: noCacheHeaders });
 
     await prisma.service.delete({ where: { id } });
+
+    await prisma.auditLog.create({
+      data: {
+        userName: 'Admin',
+        action: 'Deleted Service',
+        module: 'Services',
+        recordId: id,
+        details: `Deleted service ID: ${id}`,
+      },
+    }).catch(() => {});
 
     try {
       revalidatePath('/services');
